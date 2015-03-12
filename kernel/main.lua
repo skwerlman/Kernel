@@ -39,6 +39,7 @@ function string:split(delimiter)
   return result
 end
 
+logf('TARDIX kernel version 0x%X', 3405691582)
 
 local ok, err =  _newThread(loadfile('/kernel/workers/sysw.lua')):start()
 
@@ -48,5 +49,3 @@ if not ok then
     sleep(1)
   end
 end
-
-logf('CCL/2 version 0x%X', 3405691582)
