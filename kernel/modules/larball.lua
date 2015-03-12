@@ -121,3 +121,17 @@ local _lar = module 'larballs' {
     end
   }
 }
+
+local _base64 = module 'base64' {
+  text = {
+    load = function()
+      _G.base64 = {
+        ['encode'] = enc,
+        ['decode'] = dec,
+      }
+    end,
+    unload = function()
+      _G.base64 = nil
+    end
+  }
+}
