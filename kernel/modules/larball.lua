@@ -102,18 +102,17 @@ local _lar = module 'larballs' {
   text = {
     load = function()
       _G.larball = {
-        ['lar_file'] = function(file, dir)
+        ['lar'] = function(file, dir)
           fs.delete(file)
           local x = fs.open(file, 'w')
           x.writeLine(enc(textutils.serialize(_do_larring(dir))))
           x.close()
 
         end,
-        ['unlar_file'] = _do_unlarballing,
-        ['root_unlar'] = function(file)
+        ['unlar'] = _do_unlarballing,
+        ['unlarToRoot'] = function(file)
           _do_unlarballing('/', file)
         end,
-        ['do_dirlar'] = _do_larring,
       }
     end,
     unload = function()
