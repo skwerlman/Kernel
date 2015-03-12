@@ -23,9 +23,10 @@ function unloadmod(name)
 end
 
 function statemod(name, state)
-  logf('trying to state \'%s\'', name)
+  logf('trying to state \'%s\': %s', name, state)
 
-  if _modules[name] then
+  if _modules[name] and _modules[name].text.states
+      and _modules[name].text.states[state] then
     _modules[name].text.states[name]()
   end
 end
