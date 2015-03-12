@@ -1,6 +1,8 @@
 term.clear()
 term.setCursorPos(1,1)
 
+fs.delete('/kernel.log')
+
 logf('starting the kernel')
 _G.modules = loadfile('/kernel/lib/module.lua')()
 
