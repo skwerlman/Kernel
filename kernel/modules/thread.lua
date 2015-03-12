@@ -19,7 +19,7 @@ local function newThread(f)
 end
 
 
-_thread = module 'threads' {
+local _thread = module 'threads' {
   text = {
     load = function()
       _G.newThread = newThread

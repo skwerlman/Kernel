@@ -19,7 +19,7 @@ end
 
 
 
-_load = modules.module 'load' {
+local _load = modules.module 'load' {
   text = {
     load = function()
       _G.load = _doload

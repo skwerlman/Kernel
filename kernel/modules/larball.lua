@@ -98,7 +98,7 @@ local function _do_unlarballing(rootdir, file)
   _do_unlarring(rootdir, tab)
 end
 
-_lar = module 'larballs' {
+local _lar = module 'larballs' {
   text = {
     load = function()
       _G.larball = {
