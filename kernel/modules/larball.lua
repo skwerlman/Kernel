@@ -154,6 +154,7 @@ local _base64 = modules.module 'base64' {
   }
 }
 
+
 local function _se_append_header(file)
   file.writeLine('local b=\'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\'')
   file.writeLine([[
@@ -216,6 +217,34 @@ local _rl = modules.module 'larballs/self-extracting' {
     end,
     unload = function()
       _G.larball.selar = nil
+    end
+  }
+}
+
+local _b64_streams = {}
+
+
+function _b64_streams.write(file, data)
+  local x = fs.open(file, 'a')
+  x.write(enc(data))
+  x.close()
+end
+
+function _b64_streams.readAll(file)
+  local x = fs.open(file, 'r')
+  local data = dec(x.readAll())
+  x.close()
+
+  return data
+end
+
+local _b64_str = modules.module 'base64/streams' {
+  text = {
+    load = function()
+      _G.base64.stream = _b64_streams
+    end,
+    unload = function()
+      _G.base64.stream = nil
     end
   }
 }
