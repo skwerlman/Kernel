@@ -1,0 +1,24 @@
+local tArgs = {...}
+
+if tArgs[1] == 'unlar' then
+  larball.unlar((
+   tArgs[3] and tArgs[3] or (shell and shell.getRunningProgram() or '/')), tArgs[2])
+elseif tArgs[1] == 'lar' then
+  larball.lar(tArgs[2], tArgs[3])
+elseif tArgs[1] == 'selar' then
+  larball.selar(tArgs[2], tArgs[3])
+else
+  print (""..
+    "Error: not enough arguments/ unknown option.\n"..
+
+    "options:\n"..
+      "\tunlar <file> [root directory]\n"..
+      "\t\t>the root directory is optional, it'll use shell.getRunningProgram() or '/'.\n"..
+
+      "\tlar <file> <directory>\n"..
+      "\t\t>compresses the directory.\n"..
+      "\tselar <file> <directory>\n"..
+      "\t\t>compresses the directory to a self-expanding lar..\n"..
+  "")
+
+end

@@ -2,27 +2,27 @@
 
 local _modules = {}
 
-function module(name)
+local function module(name)
   return function(data)
     _modules[name] = data
   end
 end
 
-function loadmod(name)
+local function loadModule(name)
   logf('trying to load \'%s\'', name)
   if _modules[name] then
     _modules[name].text.load()
   end
 end
 
-function unloadmod(name)
+local function unloadModule(name)
   logf('trying to unload \'%s\'', name)
   if _modules[name] then
     _modules[name].text.unload()
   end
 end
 
-function statemod(name, state)
+local function stateModule(name, state)
   logf('trying to state \'%s\': %s', name, state)
 
   if _modules[name] and _modules[name].text.states
@@ -31,31 +31,43 @@ function statemod(name, state)
   end
 end
 
-function loadallmods()
+local function loadAllModules()
   for k, v in pairs(_modules) do
-    loadmod(k)
+    loadModule(k)
   end
 end
 
-function unloadallmods()
+local function unloadAllModules()
   for k, v in pairs(_modules) do
-    unloadmod(k)
+    unloadModule(k)
   end
 end
 
-function stateallmods(state)
+local function stateAllModules(state)
   for k, v in pairs(_modules) do
-    statemod(k, state)
+    stateModule(k, state)
   end
 end
 
+local function reloadModule(mod)
+  unloadModule(mod)
+  loadModule(mod)
+end
+
+local function reloadAllModules()
+  for k, v in pairs(_modules) do
+    reloadModule(k)
+  end
+end
 
 return {
   ['module'] = module,
-  ['loadmod'] = loadmod,
-  ['loadallmods'] = loadallmods,
-  ['unloadmod'] = unload,
+  ['loadModule'] = loadModule,
+  ['loadAllModules'] = loadAllModules,
+  ['unloadModule'] = unloadModule,
   ['unloadallmods'] = unloadallmods,
-  ['statemod'] = statemod,
-  ['stateallmods'] = stateallmods
+  ['stateModule'] = stateModule,
+  ['stateAllModules'] = stateAllModules,
+  ['reloadModule'] = reloadModule,
+  ['reloadAllModules'] = reloadAllModules
 }

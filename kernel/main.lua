@@ -44,7 +44,7 @@ logf('TARDIX kernel version 0x%X', 3405691582)
 local ok, err =  _newThread(loadfile('/kernel/workers/sysw.lua')):start()
 
 if not ok then
-  logf('[critical] failed to load system worker. \n\t error : %s', err)
+  logf('[critical] error on system worker. \n\t error : %s', err)
   while true do
     sleep(1)
   end

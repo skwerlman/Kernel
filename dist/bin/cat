@@ -1,0 +1,15 @@
+local tArgs = {...}
+
+if #tArgs < 1 then
+  print('Not enough arguments.\nUsage:\n\tcat <file>\nNote: you need to use absolute paths.')
+  error()
+else
+  if fs.exists(tArgs[1]) then
+    local handle = fs.open(tArgs[1], 'r')
+    print(handle.readAll())
+    handle.close()
+  else
+    print('File ', tArgs[1], ' is not a file.')
+    error()
+  end
+end

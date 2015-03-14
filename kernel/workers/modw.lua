@@ -23,4 +23,4 @@ for k, v in pairs(list) do
   end
 end
 
-loadallmods()
+modules.loadAllModules()
