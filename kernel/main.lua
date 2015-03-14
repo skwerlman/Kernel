@@ -39,7 +39,7 @@ function string:split(delimiter)
   return result
 end
 
-logf('TARDIX kernel version 0x%X', 3405691582)
+logf('TARDIX kernel version 2015-MARCH')
 
 local ok, err =  _newThread(loadfile('/kernel/workers/sysw.lua')):start()
 
