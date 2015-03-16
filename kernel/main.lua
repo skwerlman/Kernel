@@ -3,18 +3,20 @@ term.setCursorPos(1,1)
 
 local _starttime = os.clock()
 
-fs.delete('/kernel.log')
-
 _G.params = {
   ["nocolor"] = not (
     (term.isColor and term.isColor()) or (term.isColour and term.isColour() ) ),
   ["root"] = ({...})[1] and ({...})[1] or '/'
 }
 
+fs.delete(fs.combine(_G.params.root, '/kernel.log'))
+
+
+
 _G.modules = loadfile(fs.combine(_G.params.root, '/lib/module.lua'))()
 loadfile(fs.combine(_G.params.root,'/lib/libk.lua'))()
 
-logf('starting the kernel')
+logf('Starting the kernel')
 
 
 

@@ -9,21 +9,21 @@ local function module(name)
 end
 
 local function loadModule(name)
-  logf('trying to load \'%s\'', name)
+  logf('Trying to load \'%s\'', name)
   if _modules[name] then
     _modules[name].text.load()
   end
 end
 
 local function unloadModule(name)
-  logf('trying to unload \'%s\'', name)
+  logf('Trying to unload \'%s\'', name)
   if _modules[name] then
     _modules[name].text.unload()
   end
 end
 
 local function stateModule(name, state)
-  logf('trying to state \'%s\': %s', name, state)
+  logf('Trying to state \'%s\': %s', name, state)
 
   if _modules[name] and _modules[name].text.states
       and _modules[name].text.states[state] then
