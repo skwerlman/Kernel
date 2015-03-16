@@ -18,7 +18,6 @@ local list = (listAll( fs.combine(_G.params.root, '/modules')))
 
 for k, v in pairs(list) do
   if not fs.isDir(v) then
-    logf('doing file \'%s\'', v)
     dofile(v)
   end
 end
