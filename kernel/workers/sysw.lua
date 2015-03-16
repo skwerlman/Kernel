@@ -10,7 +10,7 @@ logf('starting system worker.')
 
 
 
-local data = string.split(readfile('/kernel/etc/tasks.list'), '\n')
+local data = string.split(readfile(_G.params.root .. '/etc/tasks.list'), '\n')
 
 local function _newThread(f)
   local thread = {
@@ -34,7 +34,12 @@ end
 
 
 for i = 1, #data do
-  local ok, err =  _newThread(loadfile(data[i])):start()
+  local __ok, err =  loadfile(fs.combine(_G.params.root, data[i]))
+  if not __ok then
+    logf('[critical] failed to load system worker. \n\t error : %s', err)
+  end
+
+  local ok, err = _newThread(__ok):start()
 
   if not ok then
     logf('[critical] failed to load system worker. \n\t error : %s', err)

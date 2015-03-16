@@ -157,37 +157,13 @@ local _base64 = modules.module 'base64' {
 
 local function _se_append_header(file)
   file.writeLine('local b=\'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\'')
-  file.writeLine([[
-    local function dec(data)
-        data = string.gsub(data, '[^'..b..'=]', '')
-        return (data:gsub('.', function(x)
-            if (x == '=') then return '' end
-            local r,f='',(b:find(x)-1)
-            for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>0 and '1' or '0') end
-            return r;
-        end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
-            if (#x ~= 8) then return '' end
-            local c=0
-            for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end
-            return string.char(c)
-        end))
-    end
-  ]])
+  file.writeLine("local function dec(data) data = string.gsub(data, '[^'..b..'=]', '') return (data:gsub('.', function(x) if (x == '=') then return '' end local r,f='',(b:find(x)-1) for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>0 and '1' or '0') end return r; end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x) if (#x ~= 8) then return '' end local c=0 for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end return string.char(c) end)) end")
 
   file.flush()
 end
 
 local function _se_append_extractor(file, data)
-  file.writeLine([[
-    local function _do_unlarballing(root)
-      local data = textutils.unserialize(dec(_file_data))
-      for i = 1, #data do
-        local file = fs.open(fs.combine(root, data[i].meta.path), 'w')
-        file.writeLine(data[i].data)
-        file.close()
-      end
-    end
-  ]])
+  file.writeLine("local function _do_unlarballing(root) local data = textutils.unserialize(dec(_file_data)) for i = 1, #data do local file = fs.open(fs.combine(root, data[i].meta.path), 'w') file.writeLine(data[i].data) file.close() end end")
 
   file.write('_do_unlarballing(({...})[1])')
 
@@ -207,7 +183,7 @@ local function _se_write_larball(file, data)
   file_h.close()
 end
 
-local _rl = modules.module 'larballs/self-extracting' {
+local _rl = modules.module 'larballs/se' {
   text = {
     load = function()
       _G.larball.selar = function(file, dir)

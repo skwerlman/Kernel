@@ -14,7 +14,7 @@ local function listAll(_path, _files)
 end
 
 --logf('module worker starting')
-local list = (listAll '/kernel/modules')
+local list = (listAll( fs.combine(_G.params.root, '/modules')))
 
 for k, v in pairs(list) do
   if not fs.isDir(v) then

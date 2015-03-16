@@ -1,10 +1,22 @@
 term.clear()
 term.setCursorPos(1,1)
 
+local _starttime = os.clock()
+
 fs.delete('/kernel.log')
 
+_G.params = {
+  ["nocolor"] = not (
+    (term.isColor and term.isColor()) or (term.isColour and term.isColour() ) ),
+  ["root"] = ({...})[1] and ({...})[1] or '/'
+}
+
+_G.modules = loadfile(fs.combine(_G.params.root, '/lib/module.lua'))()
+loadfile(fs.combine(_G.params.root,'/lib/libk.lua'))()
+
 logf('starting the kernel')
-_G.modules = loadfile('/kernel/lib/module.lua')()
+
+
 
 local function _newThread(f)
   local thread = {
@@ -41,7 +53,12 @@ end
 
 logf('TARDIX kernel version 2015-MARCH')
 
-local ok, err =  _newThread(loadfile('/kernel/workers/sysw.lua')):start()
+local ok, err =  _newThread(loadfile(fs.combine(_G.params.root, '/workers/sysw.lua'))):start()
+
+
+local _elapsed = math.floor(os.clock() - _starttime)
+
+logf('Done in %d second%s', (_elapsed == 0 and 1 or _elapsed), ((_elapsed == 0 and 1 or _elapsed) == 1 and "." or "s."))
 
 if not ok then
   logf('[critical] error on system worker. \n\t error : %s', err)

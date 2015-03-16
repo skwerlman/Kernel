@@ -3,32 +3,10 @@ if not shell then
   error()
 end
 
-function _G.logf(fmt, ...)
-  local x = fs.open('/kernel.log', 'a')
-  x.write(('[%d] :: ' .. fmt .. '\n'):format(os.time(), ...))
-  x.close()
-
-  print(('[%d] :: ' .. fmt):format(os.time(), ...))
-end
-
-function _G.dofiles(data)
-  for i = 1, #data do
-    if not fs.exists(data[i]) then
-      logf('[error] :: %s doesn\'t exist.', data[i])
-    elseif fs.isDir(data[i]) then
-      logf('[error] :: %s is a directory.', data[i])
-    else
-      dofile(data[i])
-    end
-  end
-end
-
-os.queueEvent('ccl/2 load')
-
 local ok, err = loadfile('/kernel/main.lua')
 
 if not ok then
   print(err)
 end
 
-ok()
+ok('/kernel')
