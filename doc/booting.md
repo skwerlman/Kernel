@@ -15,14 +15,6 @@ To prepare the _larball_ for extraction, you first need a _base64_decode_ routin
 
 The _[Tron Paul bootloader](http://github.com/)_ can provide a simple base64 decode rountine, called `dec`. Use the `env: &dec;` instruction before the `lua /kernel/main.lua`. Alternatively, if using the `tardix /kernel.lar` instruction, the kernel is automagimatically extracted, and executed.
 
-Also required in the environment is a `logf` routine. The logf routine provided in the _debug bootloader_ is the standard, but it can be improved. A basic logf routine is provided below.
-
-``` coffee-script
-  @logf = (fmt, ...) ->
-    print (fmt).format(...)
-```
-
-That's not the best implementation, but it certainly works.
 
 
 #####Step 2: Decoding the larball
