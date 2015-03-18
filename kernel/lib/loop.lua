@@ -89,7 +89,7 @@ function _G.class(base, init)
       if v == name then return v end
     end
 
-    return false, 'No mathes'
+    return false, 'No matches'
   end
 
   setmetatable(c, mt)
