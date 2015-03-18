@@ -80,7 +80,7 @@ function _G.class(base, init)
     end
   end
 
-  function c:respondsToSelector( selector )
+  function c:can( selector )
     return self[selector] and type(self[selector]) == 'function'
   end
 
