@@ -1,4 +1,3 @@
-
 function _G.class(base, init)
   local c = {}    -- a new class instance
   if not init and type(base) == 'function' then
@@ -17,6 +16,7 @@ function _G.class(base, init)
   -- expose a constructor which can be called by <classname>(<args>)
   local mt = {}
   mt.__cosumed = {}
+  mt.__consumed.mixins = {}
   mt.__call = function(class_tbl, ...)
     local obj = {}
     setmetatable(obj,c)
@@ -71,11 +71,25 @@ function _G.class(base, init)
       table.insert(getmetatable(self).__consumed, getmetatable(mixin).__name)
     end
 
+    table.insert(getmetatable(self).__consumed.mixins, mixin)
+
     for k,v in pairs(mixin) do
       if k == 'init' then else
         self[k] = mixin[k]
       end
     end
+  end
+
+  function c:respondsToSelector( selector )
+    return self[selector] and type(self[selector]) == 'function'
+  end
+
+  function c:includes ( name )
+    for k, v in pairs(getmetatable(self).__consumed)
+      if v == name then return v end
+    end
+
+    return false, 'No mathes'
   end
 
   setmetatable(c, mt)
