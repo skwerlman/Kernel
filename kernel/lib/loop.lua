@@ -14,10 +14,9 @@ function _G.class(base, init)
   -- the class will be the metatable for all its objects,
   -- and they will look up their methods in it.
   c.__index = c
-
   -- expose a constructor which can be called by <classname>(<args>)
   local mt = {}
-
+  mt.__cosumed = {}
   mt.__call = function(class_tbl, ...)
     local obj = {}
     setmetatable(obj,c)
@@ -68,8 +67,14 @@ function _G.class(base, init)
   end
 
   function c:include ( mixin )
+    if getmetatable(mixin).__name then
+      table.insert(getmetatable(self).__consumed, getmetatable(mixin).__name)
+    end
+
     for k,v in pairs(mixin) do
-      c[k] = mixin[k]
+      if k == 'init' then else
+        self[k] = mixin[k]
+      end
     end
   end
 
