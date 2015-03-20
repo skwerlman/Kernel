@@ -94,7 +94,7 @@ function _G.class(base, init)
   end
 
   function c:includes ( name )
-    for k, v in pairs(getmetatable(self).__consumed)
+    for k, v in pairs(getmetatable(self).__consumed) do
       if v == name then return v end
     end
 
