@@ -31,3 +31,29 @@ function _G.dofiles(data)
     end
   end
 end
+
+_G.arch = {}
+
+function _G.arch.getComputerType()
+  local ret = ""
+
+  if pocket then
+    ret = ret .. "pocket-"
+  elseif turtle then
+    ret = ret .. "turtle-"
+  else
+    ret = ret .. "computer-"
+  end
+
+  if term.isColor and term.isColor() then
+    ret = ret .. "color"
+  else
+    ret = ret .. "regular"
+  end
+
+  return ret
+end
+
+function _G.arch.getTriplet()
+  return arch.getComputerType() .. '-tardix-tabi'
+end

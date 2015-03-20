@@ -1,4 +1,5 @@
-#Tardix Driver Standard
+Tardix Driver Standard
+======================
 
 A driver is a computer program that _operates_ or _controls_ a specific type of device that is connected to the computer. Device drivers provide a _software interface_ to hardware devices, where other programs can use it without knowing it`s design.
 

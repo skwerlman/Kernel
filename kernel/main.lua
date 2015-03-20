@@ -3,13 +3,14 @@ term.setCursorPos(1,1)
 
 local _starttime = os.clock()
 
+fs.delete('/kernel.log')
+
 _G.params = {
   ["nocolor"] = not (
     (term.isColor and term.isColor()) or (term.isColour and term.isColour() ) ),
   ["root"] = ({...})[1] and ({...})[1] or '/'
 }
 
-fs.delete(fs.combine(_G.params.root, '/kernel.log'))
 
 
 
@@ -60,9 +61,6 @@ local ok, err =  _newThread(loadfile(fs.combine(_G.params.root, '/workers/sysw.l
 
 local _elapsed = math.floor(os.clock() - _starttime)
 
-logf('[critical] Systemw exited!\nPress any key to reboot.')
-os.pullEvent()
-os.reboot()
 
 if not ok then
   logf('[critical] error on system worker. \n\t error : %s', err)

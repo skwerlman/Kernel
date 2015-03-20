@@ -1,4 +1,5 @@
-#Booting
+Booting
+=======
 **_NOTE: This file details the booting process, providing metacode examples._**
 **_DO NOT use the code provided as actual code._**
 

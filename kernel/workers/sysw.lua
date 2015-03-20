@@ -78,6 +78,3 @@ for i = 1, #inits do
     break
   end
 end
-logf('[critical] no init found!\nYour distro is borked. Press any key (or click) to reboot.')
-os.pullEvent()
-os.reboot()
