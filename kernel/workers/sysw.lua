@@ -48,3 +48,36 @@ for i = 1, #data do
     end
   end
 end
+
+-- pass control to userland
+-- hardcoded
+
+function _run(init)
+  local __ok, err =  loadfile(init)
+  if not __ok then
+    logf('[critical] failed to load init \'%s\'. \n\t error : %s', init, err)
+  end
+
+  local ok, err = _newThread(__ok):start()
+end
+
+local inits = {
+  '/init',
+  '/sbin/init',
+  '/bin/init',
+  '/lib/init',
+  '/usr/init',
+  '/usr/sbin/init',
+  '/usr/bin/init',
+  '/usr/lib/init',
+}
+
+for i = 1, #inits do
+  if fs.exists(inits[i]) then
+    _run(inits[i])
+    break
+  end
+end
+logf('[critical] no init found!\nYour distro is borked. Press any key (or click) to reboot.')
+os.pullEvent()
+os.reboot()
