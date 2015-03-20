@@ -79,6 +79,16 @@ function _G.class(base, init)
       end
     end
   end
+
+  function c:consume( file )
+    local ret, err = loadfile(file)
+    if not ret then error(err) end
+    local data = ret()
+    setmetatable(data, {__name = file})
+
+    self:include(data)
+  end
+
   function c:can( selector )
     return self[selector] and type(self[selector]) == 'function'
   end
