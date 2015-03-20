@@ -15,7 +15,7 @@ function _G.class(base, init)
   c.__index = c
   -- expose a constructor which can be called by <classname>(<args>)
   local mt = {}
-  mt.__cosumed = {}
+  mt.__consumed = {}
   mt.__consumed.mixins = {}
   mt.__call = function(class_tbl, ...)
     local obj = {}
