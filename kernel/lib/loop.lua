@@ -24,14 +24,14 @@ function _G.class(base, init)
       init(obj,...)
     else
       -- make sure that any stuff from the base class is initialized!
-      if base and base.init then
-        base.init(obj, ...)
+      if base and base.__init then
+        base.__init(obj, ...)
       end
     end
     return obj
   end
 
-  c.init = init
+  c.__init = init
   c.isSubclassOf = function(self, klass)
     local m = getmetatable(self)
     while m do
