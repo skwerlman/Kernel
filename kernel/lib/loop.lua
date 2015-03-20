@@ -66,7 +66,7 @@ function _G.class(base, init)
     return tostring(self)
   end
 
-  function c:include ( mixin )
+  function c:mix ( mixin )
     if getmetatable(mixin).__name then
       table.insert(getmetatable(self).__consumed, getmetatable(mixin).__name)
     end
@@ -86,7 +86,7 @@ function _G.class(base, init)
     local data = ret()
     setmetatable(data, {__name = file})
 
-    self:include(data)
+    self:mix(data)
   end
 
   function c:can( selector )
