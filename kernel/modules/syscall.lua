@@ -28,6 +28,11 @@ function Stack:pop()
   return unpack(entries)
 end
 
+function Stack:len()
+  return #self.vals
+end
+
+
 local syscalls = {}
 
 function syscalls.uname(stack)
