@@ -31,6 +31,13 @@ local function stateModule(name, state)
   end
 end
 
+local function getModuleByName(name)
+
+   if _modules[name] then
+      return _modules[name]
+   end
+end
+
 local function loadAllModules()
   for k, v in pairs(_modules) do
     loadModule(k)
