@@ -159,7 +159,7 @@ local _load = modules.module 'load' {
       _G.load = _doload
     end,
     unload = function()
-      _G.unload = nil
+      _G.load = nil
     end
   }
 }
