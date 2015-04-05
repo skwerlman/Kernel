@@ -11,12 +11,7 @@ _G.params = {
   ["root"] = ({...})[1] and ({...})[1] or '/'
 }
 
-
-
-
-_G.modules = loadfile(fs.combine(_G.params.root, '/lib/module.lua'))()
 loadfile(fs.combine(_G.params.root,'/lib/libk.lua'))()
-loadfile(fs.combine(_G.params.root, '/lib/loop.lua'))()
 logf('Starting the kernel')
 
 

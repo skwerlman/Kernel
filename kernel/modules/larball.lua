@@ -184,11 +184,11 @@ local function _se_write_larball(file, data)
 end
 
 local _rl = modules.module 'larballs/se' {
-  text = {
-    load = function()
+  ["text"] = {
+    ["load"] = function()
+      if not _G.larball then _G.larball = {} end
       _G.larball.selar = function(file, dir)
         _se_write_larball(file, _do_larring(dir))
-
       end
     end,
     unload = function()
