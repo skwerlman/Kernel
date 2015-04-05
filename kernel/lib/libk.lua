@@ -360,3 +360,39 @@ _G.modules =  {
   ['reloadModule'] = reloadModule,
   ['reloadAllModules'] = reloadAllModules
 }
+
+function listAll(_path, _files)
+  local path = _path or ""
+  local files = _files or {}
+  if #path > 1 then table.insert(files, path) end
+  for _, file in ipairs(fs.list(path)) do
+    local path = fs.combine(path, file)
+    if fs.isDir(path) then
+      listAll(path, files)
+    else
+      table.insert(files, path)
+    end
+  end
+  return files
+end
+
+function _G.string:split(delimiter)
+  local result = { }
+  local from  = 1
+  local delim_from, delim_to = string.find( self, delimiter, from  )
+  while delim_from do
+    table.insert( result, string.sub( self, from , delim_from-1 ) )
+    from  = delim_to + 1
+    delim_from, delim_to = string.find( self, delimiter, from  )
+  end
+  table.insert( result, string.sub( self, from  ) )
+  return result
+end
+
+function table.from(tab, index)
+  local ret = {}
+  for i = index, #tab do
+    ret[i-index] = tab[i]
+  end
+  return ret
+end

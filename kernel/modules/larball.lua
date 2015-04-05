@@ -30,21 +30,6 @@ local function dec(data)
     end))
 end
 
-local function listAll(_path, _files)
-  local path = _path or ""
-  local files = _files or {}
-  if #path > 1 then table.insert(files, path) end
-  for _, file in ipairs(fs.list(path)) do
-    local path = fs.combine(path, file)
-    if fs.isDir(path) then
-      listAll(path, files)
-    else
-      table.insert(files, path)
-    end
-  end
-  return files
-end
-
 local function _do_tabling(file)
   if fs.isDir(file) then
     return
