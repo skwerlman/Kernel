@@ -202,6 +202,7 @@ end
 local _b64_str = modules.module 'base64/streams' {
   text = {
     load = function()
+      if not _G.base64 then _G.base64 = {} end
       _G.base64.stream = _b64_streams
     end,
     unload = function()
