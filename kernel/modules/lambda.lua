@@ -214,128 +214,178 @@ function execve(file, env, arg)
   return execle(file, env, unpack(arg))
 end
 
+local thread = {}
 
-local running = {}
+function thread:new( f )
 
-local Thread = class(
-  function (self, func)
-    self.state = "running"
-    self.func = func
-    self.co = coroutine.create(func)
+  local t = {}
 
-    table.insert(running, 1, self)
-  end
-)
+  t.state = "running"
+  t.environment = setmetatable( {}, { __index = getfenv( 2 ) } )
 
-function Thread:stop()
-  self.state = "stopped"
+  t.filter = nil
+
+  t.raw_environment = setmetatable( {}, {
+    __index = function( _, k )
+      return t.environment[k]
+    end,
+    __newindex = function( _, k, v )
+      t.environment[k] = v
+    end
+  } )
+
+  setfenv( f, t.raw_environment )
+  t.func = f
+  t.co = coroutine.create( f )
+
+  setmetatable( t, {
+    __index = self;
+    __type = function( self )
+      return self:type()
+    end;
+  } )
+
+  return t
 end
 
-function Thread:pause()
+function thread:stop()
+  if self.state ~= "dead" then
+    self.state = "stopped"
+  end
+end
+
+function thread:pause()
   if self.state == "running" then
     self.state = "paused"
   end
 end
 
-function Thread:resume()
+function thread:resume()
   if self.state == "paused" then
     self.state = "running"
   end
 end
 
-function Thread:restart()
+function thread:restart()
   self.state = "running"
-  self.co = coroutine.create(self.func)
+  self.co = coroutine.create( self.func )
 end
 
-function Thread:update( ... )
-  if self.state ~= "running" then return end
-  local ok, err = coroutine.resume( self.co, ... )
+function thread:update( event, ... )
+  if self.state ~= "running" then return true, self.state end -- if not running, don't update
+  if self.filter ~= nil and self.filter ~= event then return true, self.filter end -- if filtering an event, don't update
+  local ok, data = coroutine.resume( self.co, event, ... )
   if not ok then
     self.state = "stopped"
-    if type( self.onException ) == "function" then
-      self:onException( err )
-    end
+    return false, data
   end
   if coroutine.status( self.co ) == "dead" then
     self.state = "stopped"
-    if type( self.onFinish ) == "function" then
-      self:onFinish()
+    return true, "die"
+  end
+  self.filter = data
+  return true, data
+end
+
+function thread:type()
+  return "thread"
+end
+
+local process = {}
+
+function process:new( name )
+  local p = {}
+
+  p.name = name
+  p.children = {}
+
+  setmetatable( p, {
+    __index = self;
+    __type = function( self )
+      return self:type()
+    end;
+  } )
+
+  return p
+end
+
+function process:spawnThread( f )
+  local t = thread:new( f )
+  table.insert( self.children, 1, t )
+  return t
+end
+
+function process:spawnSubProcess( name )
+  local p = process:new( name )
+  table.insert( self.children, 1, p )
+  return p
+end
+
+function process:update( event, ... )
+  for i = #self.children, 1, -1 do
+    local ok, data = self.children[i]:update( event, ... )
+    if not ok then
+      if self.exceptionHandler then
+        self:exceptionHandler( self.children[i], data )
+      else
+        return false, data
+      end
+    end
+    if data == "die" or self.children[i].state == "stopped" then
+      self.children[i].state = "dead"
+      table.remove( self.children, i )
     end
   end
+  return true, #self.children == 0 and "die"
 end
 
-local Task = class(
-  function(self)
-    self.threads = {}
-  end
-)
-
-function Task:newThread(f)
-  local thread = Thread( f )
-  function thread.onException( t, err )
-    if type( self.onException ) == "function" then
-      self.onException( t, err )
-    end
-  end
-  function thread.onFinish( t, err )
-    if type( self.onFinish ) == "function" then
-      self.onFinish( t, err )
-    end
-  end
-  table.insert( self.threads, thread )
-  return thread
-end
-
-function Task:stop()
-  for i = #self.threads, 1, -1 do
-    self.threads[i]:stop()
+function process:stop()
+  for i = 1, #self.children do
+    self.children[i]:stop()
   end
 end
 
-function Task:pause()
-  for i = #self.threads, 1, -1 do
-    self.threads[i]:pause()
+function process:pause()
+  for i = 1, #self.children do
+    self.children[i]:pause()
   end
 end
 
-function Task:resume()
-  for i = #self.threads, 1, -1 do
-    self.threads[i]:resume()
+function process:resume()
+  for i = 1, #self.children do
+    self.children[i]:resume()
   end
 end
 
-function Task:restart()
-  for i = #self.threads, 1, -1 do
-    self.threads[i]:restart()
+function process:restart()
+  for i = 1, #self.children do
+    self.children[i]:restart()
   end
 end
 
-function Task:update( ... )
-  for i = #self.threads, 1, -1 do
-    self.threads[i]:update( ... )
-  end
-end
-
-function Task:removeDeadThreads()
-  for i = #self.threads, 1, -1 do
-    if self.threads[i].state == "dead" then
-      table.remove( self.threads, i )
-    end
-  end
-end
-
-function Task:count()
-  return #self.threads
-end
-
-function Task:list()
+function process:list( deep )
   local t = {}
-  for i = 1, #self.threads do
-    t[i] = self.threads[i]
+  for i = #self.children, 1, -1 do
+    if self.children[i]:type() == "process" then
+      if deep then
+        local c = self.children[i]:list( true )
+        c.name = self.children[i].name
+        t[#t + 1] = c
+      else
+        t[#t + 1] = self.children[i]
+      end
+    elseif self.children[i]:type() == "thread" then
+      t[#t + 1] = self.children[i]
+    end
   end
   return t
 end
+
+function process:type()
+  return "process"
+end
+
+process.main = process:new "main"
 
 local function _doload(id)
 
