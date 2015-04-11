@@ -1,3 +1,7 @@
+function _G.printf(fmt, ...)
+  print(fmt:format(...))
+end
+
 function _G.logf(fmt, ...)
   local x = fs.open('/kernel.log', 'a')
   x.write(('[%d] :: ' .. fmt .. '\n'):format(os.clock(), ...))
@@ -114,57 +118,6 @@ function getopt(optstring, ...)
 	end)
 end
 
-function getPanicImg()
-  return {
-    {
-      0,
-      0,
-      512,
-    },
-    {
-      512,
-      0,
-      0,
-      512,
-    },
-    {
-      0,
-      0,
-      0,
-      512,
-    },
-    {
-      512,
-      0,
-      0,
-      512,
-    },
-    {
-      0,
-      0,
-      512,
-    },
-  }
-end
-
-function printCentered(y, text)
-  local w, h = term.getSize()
-  term.setCursorPos(y, w-#text)
-  print(text)
-end
-
-function panic(id, desc) -- like a penguin!
-  term.clear()
-  term.setCursorPos(1,1)
-
-  printCentered(7, "PANIC!")
-  printCentered(8, "Run! Run! RUN!")
-
-
-  term.setCursorPos(1, 9)
-  print("A critical system error has arised.\nSystem execution can not proceed.")
-  print()
-end
 
 
 ------ LIB LOOP
@@ -395,4 +348,26 @@ function table.from(tab, index)
     ret[i-index] = tab[i]
   end
   return ret
+end
+
+function kassert(exp)
+  if (not exp) then
+    printf("Kernel assertion failed at %d!", os.clock())
+    while true do
+      coroutine.yield "die" -- kassert from a thread should destroy itself.
+    end
+  end
+end
+
+
+function readEncodedTable(path)
+	local x = fs.open(path, read)
+	kassert(x)
+	local data = x.readAll()
+	x.close()
+
+
+	data = textutils.unserialize(base64.decode(data))
+
+	return data
 end

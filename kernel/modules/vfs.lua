@@ -1,6 +1,6 @@
 local _VFS = class(
 	function(self)
-	
+
 		self._fsreg = {} -- Filesystem registry
 		self._mtab  = {} -- Mount table
 	end
@@ -36,13 +36,13 @@ function _VFS:open(path, ...)
 
 end
 
-local _VFS = modules.module 'vfs' {
+local _vfs = modules.module 'vfs' {
 	text = {
 		load = function()
 			_G.vfs = _VFS
 		end,
 		unload = function()
-		
+
 			_G.vfs = nil
 			-- TODO: We should probably panic()
 		end
