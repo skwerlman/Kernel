@@ -341,7 +341,7 @@ local function _doload(id)
 
   local pid = id:gsub(':', '/')
 
-  if not ends(pid, '.lua') then
+  if not string.sub(pid, -4) == '.lua' then
     if not fs.exists(pid) then
       pid = pid..'.lua'
     end
