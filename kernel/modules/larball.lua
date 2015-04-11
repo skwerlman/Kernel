@@ -177,6 +177,7 @@ local _rl = modules.module 'larballs/se' {
       end
     end,
     unload = function()
+      if not _G.larball then return end
       _G.larball.selar = nil
     end
   }
@@ -206,6 +207,7 @@ local _b64_str = modules.module 'base64/streams' {
       _G.base64.stream = _b64_streams
     end,
     unload = function()
+      if not _G.base64 then return end
       _G.base64.stream = nil
     end
   }

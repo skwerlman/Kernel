@@ -145,6 +145,30 @@ function _G.Class(base, init)
   mt.__call = function(class_tbl, ...)
     local obj = {}
     setmetatable(obj,c)
+    function obj:equals (otherObject)
+      if not otherObject:isSubclassOf(self) then
+        return false
+      else
+        for i = 1, #otherObject do
+          if not otherObject[i] == self[i] then
+            return false
+          end
+        end
+      end
+      return true
+    end
+
+    function obj:clone ()
+      return obj
+    end
+
+    function obj:toString ()
+      local mt = getmetatable(self)
+      if mt.__tostring then
+        return mt.__tostring()
+      end
+      return tostring(self)
+    end
     if init then
       init(obj,...)
     else
@@ -166,29 +190,42 @@ function _G.Class(base, init)
     return false
   end
 
-  function c:equals (otherObject)
-    if not otherObject:isSubclassOf(self) then
-      return false
-    else
-      for i = 1, #otherObject do
-        if not otherObject[i] == self[i] then
-          return false
+  function c:new(...)
+    local obj = {}
+    setmetatable(obj,c)
+    function obj:equals (otherObject)
+      if not otherObject:isSubclassOf(self) then
+        return false
+      else
+        for i = 1, #otherObject do
+          if not otherObject[i] == self[i] then
+            return false
+          end
         end
       end
+      return true
     end
-    return true
-  end
 
-  function c:clone ()
-    return c
-  end
-
-  function c:toString ()
-    local mt = getmetatable(self)
-    if mt.__tostring then
-      return mt.__tostring()
+    function obj:clone ()
+      return obj
     end
-    return tostring(self)
+
+    function obj:toString ()
+      local mt = getmetatable(self)
+      if mt.__tostring then
+        return mt.__tostring()
+      end
+      return tostring(self)
+    end
+    if init then
+      init(obj,...)
+    else
+      -- make sure that any stuff from the base class is initialized!
+      if base and base.__init then
+        base.__init(obj, ...)
+      end
+    end
+    return obj
   end
 
   function c:mix ( mixin )
@@ -292,15 +329,18 @@ local function stateAllModules(state)
   end
 end
 
-local function reloadModule(mod)
-  unloadModule(mod)
-  loadModule(mod)
-end
 
 local function reloadAllModules()
-  for k, v in pairs(_modules) do
-    reloadModule(k)
+  unloadAllModules()
+  local list = (listAll( fs.combine(_G.params.root, '/modules')))
+
+  for k, v in pairs(list) do
+    if not fs.isDir(v) then
+      dofile(v)
+    end
   end
+
+  loadAllModules()
 end
 
 _G.modules =  {
@@ -311,7 +351,6 @@ _G.modules =  {
   ['unloadallmods'] = unloadallmods,
   ['stateModule'] = stateModule,
   ['stateAllModules'] = stateAllModules,
-  ['reloadModule'] = reloadModule,
   ['reloadAllModules'] = reloadAllModules
 }
 

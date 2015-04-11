@@ -321,6 +321,12 @@ function process:spawnSubProcess( name )
   return p
 end
 
+function process:spawnSubprocess( name )
+  local p = process:new( name )
+  table.insert( self.children, 1, p )
+  return p
+end
+
 function process:update( event, ... )
   for i = #self.children, 1, -1 do
     local ok, data = self.children[i]:update( event, ... )
@@ -410,11 +416,11 @@ end
 local _thread = modules.module 'threads' {
   text = {
     load = function()
-      _G.Thread = Thread
-      _G.Task = Task
+      _G.process = process
+      _G.thread = thread
     end,
     unload = function()
-      _G.newThread = nil
+      _G.process, _G.thread = nil, nil
     end
   }
 }
