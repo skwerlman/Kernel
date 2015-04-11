@@ -91,6 +91,9 @@ function _run(init)
   local __ok, err =  loadfile(init)
   if not __ok then
     logf('[critical] failed to load init \'%s\'. \n\t error : %s', init, err)
+    while true do
+      coroutine.yield('die')
+    end
   end
 
   local ok, err = _newThread(__ok):start()
