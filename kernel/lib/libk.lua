@@ -30,6 +30,7 @@ function _G.dofiles(data)
     elseif fs.isDir(data[i]) then
       logf('[error] :: %s is a directory.', data[i])
     else
+      logf("Successfully loaded %s.", data[i])
       dofile(data[i])
     end
   end
