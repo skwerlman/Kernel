@@ -35,7 +35,8 @@ function lambda:run(...)
   end
   local tEnv = {
     ["_LAMBDA"] = true,
-    ["_HELIOS"] = true
+    ["_HELIOS"] = true,
+    ["_FILE"]   = self.path
   }
   setmetatable(tEnv, {["__index"] = _G})
   setfenv(self.exec, tEnv)
@@ -50,12 +51,7 @@ function lambda:run(...)
 end
 
 function lambda.isLambda(file)
-  local e = lambda(file):load()
-  if not e then
-    return false
-  else
-    return (e.sects.head == "Lambda (HELIOS)" and true or false)
-  end
+  return type(lambda:new(file):load().exec) == 'function'
 end
 
 function lambda.write(fnc, file)
@@ -91,6 +87,20 @@ function lambdawrite:addPreloadFunction(func)
   return self
 end
 
+function lambdawrite:linkLambda(obj)
+  if not self.preloads then
+    self.preloads = {}
+  end
+
+  table.insert(self.preloads, obj.exec)
+  if obj.preloads then
+    for k, v in pairs(obj.preloads) do
+      table.insert(self.preloads, v)
+    end
+  end
+end
+
+
 function lambdawrite:addVar(key, val)
   if not self.preloads then
     self.preloads = {}
@@ -110,7 +120,10 @@ function lambdawrite:addMainFunction(func)
   return self
 end
 
-function lambdawrite:write()
+function lambdawrite:write(file)
+  if not self.path and file then
+    self.path = file
+  end
   local data = {}
   data.sections = {}
   data.sections.text = base64.encode(string.dump(self.main))
@@ -119,8 +132,10 @@ function lambdawrite:write()
     ["MAGIC"] = 0xbadb00b
   }
   data.sections.preload = {}
-  for k, v in pairs(self.preloads) do
-    table.insert(data.sections.preload, base64.encode(string.dump(v)))
+  if self.preloads then
+    for k, v in pairs(self.preloads) do
+      table.insert(data.sections.preload, base64.encode(string.dump(v)))
+    end
   end
 
   local e = fs.open(self.path, 'w')
@@ -151,13 +166,46 @@ setmetatable(DefaultEnvironment, {
   end
 })
 
+local execHandles = {}
+_G.ExecutableManager = {}
+
+function ExecutableManager.addHandle(name, isfunc, dofunc)
+  execHandles[name] = ({isfunc, dofunc})
+end
+
+function ExecutableManager.removeHandle(name)
+  execHandles[name] = nil
+end
+
+function ExecutableManager.getIfIs(file)
+  for k, v in pairs(execHandles) do
+      if v[1](file) then return v[2] end
+  end
+  return false
+end
+
+
 function execl(file, ...)
   if not fs.exists(file) then
     return false, file .. " doesn't exist"
   elseif lambda.isLambda(file) then
     return lambda:new(file):load():run(...)
+  elseif ExecutableManager.getIfIs(file) then
+    return ExecutableManager.getIfIs(file)(...)
   else
     local fnc = loadfile(file)
+    local _env = {
+      ["_FILE"] = file
+    }
+    setmetatable(_env, {["__index"] = function(t, k)
+      if not rawget(t, k) then
+        return rawget(_G, k)
+      else
+        return rawget(t, k)
+      end
+    end
+    })
+    setfenv(fnc, _env)
     return pcall(fnc, ...)
   end
 end
@@ -170,6 +218,7 @@ function execle(file, env, ...)
   local func;
   local preload;
   local err;
+  env._FILE = file
 
   if not fs.exists(file) then
     return false, file .. " doesn't exist"
@@ -177,6 +226,8 @@ function execle(file, env, ...)
     func = lambda:new(file):load().exec
     err = lambda:new(file):load().error
     preload = lambda:new(file):load().sects.preload
+  elseif ExecutableManager.getIfIs(file) then
+    func = ExecutableManager.getIfIs(file)
   else
     func = loadfile(file)
   end

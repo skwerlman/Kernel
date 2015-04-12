@@ -30,7 +30,7 @@ function _G.dofiles(data)
     elseif fs.isDir(data[i]) then
       logf('[error] :: %s is a directory.', data[i])
     else
-      logf("Successfully loaded %s.", data[i])
+      logf('Successfully loaded %s.', data[i])
       dofile(data[i])
     end
   end
@@ -39,20 +39,20 @@ end
 _G.arch = {}
 
 function _G.arch.getComputerType()
-  local ret = ""
+  local ret = ''
 
   if pocket then
-    ret = ret .. "pocket-"
+    ret = ret .. 'pocket-'
   elseif turtle then
-    ret = ret .. "turtle-"
+    ret = ret .. 'turtle-'
   else
-    ret = ret .. "computer-"
+    ret = ret .. 'computer-'
   end
 
   if term.isColor and term.isColor() then
-    ret = ret .. "color"
+    ret = ret .. 'color'
   else
-    ret = ret .. "regular"
+    ret = ret .. 'regular'
   end
 
   return ret
@@ -66,8 +66,8 @@ function getopt(optstring, ...)
 	local opts = { }
 	local args = { ... }
 
-	for optc, optv in optstring:gmatch"(%a)(:?)" do
-		opts[optc] = { hasarg = optv == ":" }
+	for optc, optv in optstring:gmatch'(%a)(:?)' do
+		opts[optc] = { hasarg = optv == ':' }
 	end
 
 	return coroutine.wrap(function()
@@ -79,9 +79,9 @@ function getopt(optstring, ...)
 
 			i = i + 1
 
-			if arg == "--" then
+			if arg == '--' then
 				break
-			elseif arg:sub(1, 1) == "-" then
+			elseif arg:sub(1, 1) == '-' then
 				for j = 2, #arg do
 					local opt = arg:sub(j, j)
 
@@ -91,7 +91,7 @@ function getopt(optstring, ...)
 								if args[i] then
 									yield(opt, args[i])
 									i = i + 1
-								elseif optstring:sub(1, 1) == ":" then
+								elseif optstring:sub(1, 1) == ':' then
 									yield(':', opt)
 								else
 									yield('?', opt)
@@ -355,7 +355,7 @@ _G.modules =  {
 }
 
 function listAll(_path, _files)
-  local path = _path or ""
+  local path = _path or ''
   local files = _files or {}
   if #path > 1 then table.insert(files, path) end
   for _, file in ipairs(fs.list(path)) do
@@ -392,11 +392,11 @@ end
 
 function kassert(exp)
   if (not exp) then
-    printf("Kernel assertion failed at %d!", os.clock())
+    printf('Kernel assertion failed at %d!', os.clock())
     while true do
-      coroutine.yield "die" -- kassert from a thread should destroy itself.
+      coroutine.yield 'die' -- kassert from a thread should destroy itself.
     end
-  end
+  end 
 end
 
 
@@ -410,4 +410,19 @@ function readEncodedTable(path)
 	data = textutils.unserialize(base64.decode(data))
 
 	return data
+end
+
+
+function table.dump(tab, prefix, key)
+  if not prefix then prefix = '' end
+  if not key then key = 'root' end
+  print((('%s[%s] = {'):format(prefix, key)))
+  for k, v in pairs(tab) do
+    if type(v) == 'table' then
+      table.dump(v, prefix..'\t', k)
+    else
+      print((prefix ..'\t[%s] = %s,'):format(tostring(k), tostring(v)))
+    end
+  end
+  print(prefix.. '}')
 end
