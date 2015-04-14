@@ -12,31 +12,9 @@ _G.params = {
 }
 
 loadfile(fs.combine(_G.params.root,'/lib/libk.lua'))()
-logf('Starting the kernel')
+logf('Starting the kernel (branch=next)')
 
-
-
-local function _newThread(f)
-  local thread = {
-    ['coro'] = coroutine.create(f)
-  }
-
-  function thread:start(...)
-    return coroutine.resume(self.coro, ...)
-  end
-
-  function thread:stop()
-    self.coro = nil -- should force lua to garbace collect
-  end
-
-  function thread:args(...)
-    return coroutine.resume(self.coro, ...)
-  end
-
-  return thread
-end
-
-logf('TARDIX kernel version 2015-MARCH')
+logf('TARDIX-NEXT snapshot 2015-APRIL')
 
 local function listAll(_path, _files)
   local path = _path or ""
@@ -68,18 +46,6 @@ modules.loadAllModules()
 -- pass control to userland
 -- hardcoded
 
-function _run(init)
-  local __ok, err =  loadfile(init)
-  if not __ok then
-    logf('[critical] failed to load init \'%s\'. \n\t error : %s', init, err)
-    while true do
-      coroutine.yield('die')
-    end
-  end
-
-  local ok, err = _newThread(__ok):start()
-end
-
 local inits = {
   '/init',
   '/sbin/init',
@@ -93,7 +59,7 @@ local inits = {
 
 for i = 1, #inits do
   if fs.exists(inits[i]) then
-    _run(inits[i])
+    execl(inits[i], 'next')
     break
   end
 end

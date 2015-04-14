@@ -396,7 +396,7 @@ function kassert(exp)
     while true do
       coroutine.yield 'die' -- kassert from a thread should destroy itself.
     end
-  end 
+  end
 end
 
 
@@ -425,4 +425,14 @@ function table.dump(tab, prefix, key)
     end
   end
   print(prefix.. '}')
+end
+
+function readfile(file)
+  local x = fs.open(file, 'r')
+  if not x then
+    error("Can not open file "..file,2)
+  end
+  local ret = x.readAll()
+  x.close()
+  return ret
 end

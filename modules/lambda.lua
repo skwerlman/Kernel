@@ -51,7 +51,14 @@ function lambda:run(...)
 end
 
 function lambda.isLambda(file)
-  return type(lambda:new(file):load().exec) == 'function'
+  local linstance = lambda:new(file)
+  return (
+    linstance and
+      (linstance.exec and
+        type(linstance.exec) == 'function' or false)
+      or false
+    or false
+  )
 end
 
 function lambda.write(fnc, file)
