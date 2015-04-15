@@ -436,3 +436,9 @@ function readfile(file)
   x.close()
   return ret
 end
+
+-- Libexcept
+
+function try()
+
+end

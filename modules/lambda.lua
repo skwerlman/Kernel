@@ -26,6 +26,15 @@ function lambda:load(file)
   self.error = err
 
   self.sects = sections
+
+  self.runThisFunc = function()
+    if self.sects.preload then
+      for k, v in pairs(self.sects.preload)
+        v()
+      end
+    end
+    self.exec()
+  end
   return self
 end
 
@@ -59,24 +68,6 @@ function lambda.isLambda(file)
       or false
     or false
   )
-end
-
-function lambda.write(fnc, file)
-  local data = {}
-  data.sections = {}
-  data.sections.text = base64.encode(string.dump(fnc))
-  data.sections.head = {
-    ["HEAD"] = "Lambda (HELIOS)",
-    ["MAGIC"] = 0xbadb00b
-  }
-
-  local toWrite = base64.encode(textutils.serialize(data))
-
-  local e = fs.open(file, 'w')
-  for k, v in pairs(tt(toWrite, 50)) do
-    e.writeLine(v)
-  end
-  e.close()
 end
 
 local lambdawrite = Class(
@@ -173,104 +164,7 @@ setmetatable(DefaultEnvironment, {
   end
 })
 
-local execHandles = {}
-_G.ExecutableManager = {}
 
-function ExecutableManager.addHandle(name, isfunc, dofunc)
-  execHandles[name] = ({isfunc, dofunc})
-end
-
-function ExecutableManager.removeHandle(name)
-  execHandles[name] = nil
-end
-
-function ExecutableManager.getIfIs(file)
-  for k, v in pairs(execHandles) do
-      if v[1](file) then return v[2] end
-  end
-  return false
-end
-
-
-function execl(file, ...)
-  if not fs.exists(file) then
-    return false, file .. " doesn't exist"
-  elseif lambda.isLambda(file) then
-    return lambda:new(file):load():run(...)
-  elseif ExecutableManager.getIfIs(file) then
-    return ExecutableManager.getIfIs(file)(...)
-  else
-    local fnc = loadfile(file)
-    local _env = {
-      ["_FILE"] = file
-    }
-    setmetatable(_env, {["__index"] = function(t, k)
-      if not rawget(t, k) then
-        return rawget(_G, k)
-      else
-        return rawget(t, k)
-      end
-    end
-    })
-    setfenv(fnc, _env)
-    return pcall(fnc, ...)
-  end
-end
-
-function execv(file, args)
-  return execl(file, unpack(args))
-end
-
-function execle(file, env, ...)
-  local func;
-  local preload;
-  local err;
-  env._FILE = file
-
-  if not fs.exists(file) then
-    return false, file .. " doesn't exist"
-  elseif lambda.isLambda(file) then
-    func = lambda:new(file):load().exec
-    err = lambda:new(file):load().error
-    preload = lambda:new(file):load().sects.preload
-  elseif ExecutableManager.getIfIs(file) then
-    func = ExecutableManager.getIfIs(file)
-  else
-    func = loadfile(file)
-  end
-
-  if preload and type(preload) == 'table' then
-    for k, v in pairs(preload) do
-      local preload = loadstring(base64.decode(v))
-      setfenv(preload, env)
-      preload()
-    end
-  end
-  if not func then
-    return false, err
-  end
-  setfenv(func, env)
-  return pcall(func, ...)
-end
---[[
-  execve:
-    execute vector environment
-    Executes a file (@param file),
-      with the environment as specified by a HCEnvironment (@param env),
-      and with the arguments as specified by a table (@param arg)
-  @param file the file to read
-    The file may be normal lua or a lambda
-    (@see: HCExecutable) (@see: HCExecutableWriter)
-  @param env the environment to apply
-    The environment needs to be an instance, or subclass, of HCEnvironment,
-    that exposes the method :apply.
-  @param arg the arguments to pass
-    The arguments can be raw tables.
-  @return Anything the program ran returned.
-]]
-function execve(file, env, arg)
-  return execle(file, env, unpack(arg))
-end
 
 local thread = {}
 
@@ -494,3 +388,88 @@ local _load = modules.module 'load' {
     end
   }
 }
+
+
+local execHandles = {}
+_G.ExecutableManager = {}
+
+function ExecutableManager.addHandle(name, isfunc, dofunc)
+  execHandles[name] = ({isfunc, dofunc})
+end
+
+function ExecutableManager.removeHandle(name)
+  execHandles[name] = nil
+end
+
+function ExecutableManager.getIfIs(file)
+  for k, v in pairs(execHandles) do
+      if v[1](file) then return v[2] end
+  end
+  return false
+end
+
+function ExecutableManager.open(file)
+  if not fs.exists(file) then
+    error("Error.")
+  end
+
+  if lambda.isLambda(file) then
+    return lambda:new(file):load().runThisFunc
+  elseif ExecutableManager.getIfIs(file) then
+    return ExecutableManager.getIfIs(file)
+  else
+    return loadfile(file)
+  end
+end
+
+function execl(file, ...)
+  local fnc = ExecutableManager.load(file)
+  local _env = {
+    ["_FILE"] = file,
+    ["process"] = {
+      ["this"] = process.main:spawnSubprocess()
+    }
+  }
+  setmetatable(_env, {["__index"] = function(t, k)
+      if not rawget(t, k) then
+        return rawget(_G, k)
+      else
+        return rawget(t, k)
+      end
+    end
+  })
+
+  setfenv(fnc, _env)
+  return pcall(fnc, ...)
+end
+
+function execv(file, args)
+  return execl(file, unpack(args))
+end
+
+function execpl(file, env, ...)
+  local fnc = ExecutableManager.load(file)
+  local _env = {
+    ["_FILE"] = file,
+    ["process"] = {
+      ["this"] = process.main:spawnSubprocess()
+    }
+  }
+  setmetatable(_env, {["__index"] = function(t, k)
+      if not rawget(t, k) then
+        return rawget(_G, k)
+      elseif not rawget(_G, k) then
+        return rawget(env, k)
+      else
+        return rawget(t, k)
+      end
+    end
+  })
+
+  setfenv(fnc, _env)
+  return pcall(fnc, ...)
+end
+
+function execpv(file, env, argv)
+  return execpl(file, env, unpack(argv))
+end
