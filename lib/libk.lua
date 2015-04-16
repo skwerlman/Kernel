@@ -7,7 +7,7 @@ function _G.logf(fmt, ...)
   x.write(('[%d] :: ' .. fmt .. '\n'):format(os.clock(), ...))
   x.close()
 
-  if _G.params.nocolor then
+  if params.nocolor then
     print(('[%d] :: ' .. fmt):format(os.clock(), ...))
   else
     io.write('[')
@@ -332,7 +332,7 @@ end
 
 local function reloadAllModules()
   unloadAllModules()
-  local list = (listAll( fs.combine(_G.params.root, '/modules')))
+  local list = (listAll( fs.combine(params.root, '/modules')))
 
   for k, v in pairs(list) do
     if not fs.isDir(v) then
@@ -401,7 +401,7 @@ end
 
 
 function readEncodedTable(path)
-	local x = fs.open(path, read)
+	local x = fs.open(path, 'r')
 	kassert(x)
 	local data = x.readAll()
 	x.close()
@@ -416,7 +416,10 @@ end
 function table.dump(tab, prefix, key)
   if not prefix then prefix = '' end
   if not key then key = 'root' end
+  if not type(tab) == 'table' then error("Not a table!", 2) end
+
   print((('%s[%s] = {'):format(prefix, key)))
+
   for k, v in pairs(tab) do
     if type(v) == 'table' then
       table.dump(v, prefix..'\t', k)
@@ -435,6 +438,13 @@ function readfile(file)
   local ret = x.readAll()
   x.close()
   return ret
+end
+
+function getRandomString(template)
+	return string.gsub(template, '[xy]', function (c)
+	local v = (c == 'x') and math.random(0, 0xf) or math.random(8, 0xb)
+		return string.format('%x', v)
+	end)
 end
 
 -- Libexcept

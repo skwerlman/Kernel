@@ -2,16 +2,16 @@ term.clear()
 term.setCursorPos(1,1)
 
 local _starttime = os.clock()
-
 fs.delete('/kernel.log')
 
 _G.params = {
   ["nocolor"] = not (
     (term.isColor and term.isColor()) or (term.isColour and term.isColour() ) ),
-  ["root"] = ({...})[1] and ({...})[1] or '/'
+  ["root"] = ({...})[1] and ({...})[1] or '/',
+  ["init"] = ({...})[2] and ({...})[2] or 'def'
 }
-
 loadfile(fs.combine(_G.params.root,'/lib/libk.lua'))()
+
 logf('Starting the kernel (branch=next)')
 
 logf('TARDIX-NEXT snapshot 2015-APRIL')
@@ -45,21 +45,35 @@ modules.loadAllModules()
 
 -- pass control to userland
 -- hardcoded
+if params.init == 'def' then
+  local inits = {
+    '/init',
+    '/sbin/init',
+    '/bin/init',
+    '/lib/init',
+    '/usr/init',
+    '/usr/sbin/init',
+    '/usr/bin/init',
+    '/usr/lib/init',
+  }
 
-local inits = {
-  '/init',
-  '/sbin/init',
-  '/bin/init',
-  '/lib/init',
-  '/usr/init',
-  '/usr/sbin/init',
-  '/usr/bin/init',
-  '/usr/lib/init',
-}
-
-for i = 1, #inits do
-  if fs.exists(inits[i]) then
-    execl(inits[i], 'next')
-    break
+  for i = 1, #inits do
+    if fs.exists(inits[i]) then
+      print(execl(inits[i], 'next'))
+      break
+    end
+  end
+else
+  if fs.exists(params.init) then
+    print(execl(params.init, 'next'))
+  else
+    term.clear()
+    term.setCursorPos(1,1)
+    print("----- CRITICAL -----")
+    print("FAILED TO LOAD INIT!")
+    print("FILE NOT FOUND ERROR")
+    while true do
+      coroutine.yield("die")
+    end
   end
 end
