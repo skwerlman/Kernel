@@ -89,8 +89,6 @@ end
 
 local function _do_unlarring(root, data)
   for i = 1, #data do
-    print(data[i])
-    print(fs.combine(root, data[i].meta.path))
     local file = fs.open(fs.combine(root, data[i].meta.path), 'w')
     file.writeLine(data[i].data)
     file.close()
