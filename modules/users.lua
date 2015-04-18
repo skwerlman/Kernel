@@ -195,7 +195,7 @@ local function hash(msg)
 end
 
 local function sHash(msg, salt)
-  return hash(msg..salt)
+  return hash(msg..""..salt)
 end
 
 -- Module code starts here
@@ -203,12 +203,12 @@ end
 local users = {}
 
 
-local function users.isUser(name)
+function users.isUser(name)
  name = tostring(name)
  return fs.isDir("/home/"..name)
 end
 
-local function users.newUser(name, pass)
+function users.newUser(name, pass)
   if users.isUser(name) then
     error("User exists already")
   end
@@ -218,24 +218,31 @@ local function users.newUser(name, pass)
   local file = fs.open("/usr/etc/pass/"..tostring(name), "w")
   file.write(sHash(tostring(pass), "This is a TARDIX password. Good try, but you ain't decodin this, son."))
   file.close()
+  return true
 end
 
-local function users.getHome(user)
+function users.getHome(user)
   return "/home/"..tostring(user)
 end
 
 
 
-local function users.deleteUser(name)
-  --Add verification
+function users.deleteUser(name)
+  --Add better verification than this...
   if users.isUser(tostring(name)) == false then
     error("Invalid user")
-  end	
-  fs.delete("/home/"..tostring(name))
+  end
+  print()
+  write("Would you like to delete user "..tostring(name).."? (y/n)")
+  local choice = string.lower(read())
+  if choice == "y" or choice == "yes" then
+   fs.delete("/home/"..tostring(name))
+  end
 end
 
-local function users.login(username, pass)
+function users.login(username, pass)
   username = tostring(username)
+  pass = tostring(pass)
   if users.isUser(username) == false then
     error("Invalid user")
   end
@@ -243,6 +250,11 @@ local function users.login(username, pass)
   local file = fs.open("/usr/etc/pass/"..username, "r")
   local passC = tostring(file.readAll())
   file.close()
+
+  if passB == passC then
+  	return true
+  end
+  return false
 end
 
 modules.module "users" {
