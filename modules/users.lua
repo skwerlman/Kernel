@@ -194,11 +194,13 @@ local function hash(msg)
 		num2s(H[5], 4) .. num2s(H[6], 4) .. num2s(H[7], 4) .. num2s(H[8], 4))
 end
 
-local function sHash(msg, salt)
-  return hash(msg..""..salt)
-end
+
 
 -- Module code starts here
+
+local function sHash(msg, salt)
+  return hash(tostring(msg)..""..tostring(salt))
+end
 
 local users = {}
 
@@ -210,7 +212,7 @@ end
 
 function users.newUser(name, pass)
   if users.isUser(name) then
-    error("User exists already")
+    error("Cannot create user with username that already exists")
   end
   fs.makeDir("/home")
   fs.makeDir("/home/"..name)
@@ -230,21 +232,16 @@ end
 function users.deleteUser(name)
   --Add better verification than this...
   if users.isUser(tostring(name)) == false then
-    error("Invalid user")
+    error("Cannot delete user that does not exist.")
   end
-  print()
-  write("Would you like to delete user "..tostring(name).."? (y/n)")
-  local choice = string.lower(read())
-  if choice == "y" or choice == "yes" then
-   fs.delete("/home/"..tostring(name))
-  end
+  fs.delete("/home/"..tostring(name))
 end
 
 function users.login(username, pass)
   username = tostring(username)
   pass = tostring(pass)
   if users.isUser(username) == false then
-    error("Invalid user")
+    error("Cannot login as user that does not exist.")
   end
   passB = tostring(sHash(pass, "This is a TARDIX password. Good try, but you ain't decodin this, son."))
   local file = fs.open("/usr/etc/pass/"..username, "r")
