@@ -251,10 +251,18 @@ function users.login(username, pass)
   local passC = tostring(file.readAll())
   file.close()
 
+  local fileB = fs.open("/usr/etc/.cUser", "w")
+  fileB.write(tostring(username))
+  fileB.close()
+
   if passB == passC then
   	return true
   end
   return false
+end
+
+function users.logout()
+	fs.delete("/usr/etc/.cUser")
 end
 
 modules.module "users" {
