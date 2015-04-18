@@ -205,7 +205,7 @@ local users = {}
 
 local function users.isUser(name)
  name = tostring(name)
- return fs.isDir("/home/"..name) and fs.exists("/home/"..name.."/.pass")
+ return fs.isDir("/home/"..name)
 end
 
 local function users.newUser(name, pass)
@@ -214,7 +214,8 @@ local function users.newUser(name, pass)
   end
   fs.makeDir("/home")
   fs.makeDir("/home/"..name)
-  local file = fs.open("/home/"..tostring(name).."/.pass", "w")
+  fs.makeDir("/usr/etc/pass")
+  local file = fs.open("/usr/etc/pass/"..tostring(name), "w")
   file.write(sHash(tostring(pass), "This is a TARDIX password. Good try, but you ain't decodin this, son."))
   file.close()
 end
@@ -244,7 +245,7 @@ local function users.login(username, pass)
     error("Invalid user")
   end
   passB = tostring(sHash(pass, "This is a TARDIX password. Good try, but you ain't decodin this, son."))
-  local file = fs.open("/home/"..username.."/.pass", "r")
+  local file = fs.open("/usr/etc/pass/"..username, "r")
   local passC = tostring(file.readAll())
   file.close()
 end
