@@ -198,7 +198,7 @@ end
 
 -- Module code starts here
 
-local function sHash(msg, salt)
+local function sHash(msg, salt) -- This is seperate from the sha256 api, but depends on the api.
   return hash(tostring(msg)..""..tostring(salt))
 end
 
