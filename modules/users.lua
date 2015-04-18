@@ -205,6 +205,7 @@ end
 local users = {}
 
 
+
 function users.isUser(name)
  name = tostring(name)
  return fs.isDir("/home/"..name)
@@ -263,6 +264,39 @@ function users.login(username, pass)
   	return true
   end
   return false
+end
+
+function users.getSudoers()
+	if not fs.exists("/usr/etc/sudoers") then
+		return {}
+	end
+	
+	local file = fs.open("/usr/etc/sudoers", "r")
+	if file then
+		local data = textutils.unserialize(file.readAll())
+		file.close()
+		return data
+	end
+	return {}
+end
+
+function users.isSudoer(name)
+	name = tostring(name)
+	if not fs.exists("/usr/etc/sudoers") then
+		return false
+	end
+	
+	local file = fs.open("/usr/etc/sudoers", "r")
+	if file then
+		local data = textutils.unserialize(file.readAll())
+		file.close()
+		for k,v in pairs(data) do
+			if v == name then
+				return true
+			end
+		end
+	end
+	return false
 end
 
 function users.logout()
