@@ -227,16 +227,11 @@ end
 
 
 local function users.deleteUser(name)
-  --Add better verification than this...
+  --Add verification
   if users.isUser(tostring(name)) == false then
     error("Invalid user")
-  end
-  print()
-  write("Would you like to delete user "..tostring(name).."? (y/n)")
-  local choice = string.lower(read())
-  if choice == "y" or choice == "yes" then
-   fs.delete("/home/"..tostring(name))
-  end
+  end	
+  fs.delete("/home/"..tostring(name))
 end
 
 local function users.login(username, pass)
