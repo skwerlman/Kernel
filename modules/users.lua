@@ -211,14 +211,21 @@ function users.isUser(name)
 end
 
 function users.newUser(name, pass)
+  name = tostring(name)
   if users.isUser(name) then
     error("Cannot create user with username that already exists")
   end
-  fs.makeDir("/home")
-  fs.makeDir("/home/"..name)
-  fs.makeDir("/usr/etc/pass")
-  local file = fs.open("/usr/etc/pass/"..tostring(name), "w")
-  file.write(sHash(tostring(pass), "This is a TARDIX password. Good try, but you ain't decodin this, son."))
+  if not fs.isDir("/home") then
+  	fs.makeDir("/home")
+  end
+  if not fs.isDir("/home/"..name) then
+  	fs.makeDir("/home/"..name)
+  end
+  if not fs.isDir("/usr/etc/pass") then
+  	fs.makeDir("/usr/etc/pass")
+  end
+  local file = fs.open("/usr/etc/pass/"..name, "w")
+  file.write(sHash(pass, "This is a TARDIX password. Good try, but you ain't decodin this, son."))
   file.close()
   return true
 end
