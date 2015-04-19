@@ -429,7 +429,11 @@ function ExecutableManager.getIfIs(file)
   return false
 end
 function ExecutableManager.open(file)
-  if not fs.exists(file) then
+  if not type(file) == 'string' then
+    print(file .. ' is not of type string. It is of type '..type(file))
+    error()
+  end
+  if not fs.exists(tostring(file)) then
     error('File ' .. file .. ' doesn\'t exist.')
   end
 
