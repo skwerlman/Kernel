@@ -83,13 +83,13 @@ if params.init == 'def' then
 
   for i = 1, #inits do
     if fs.exists(inits[i]) then
-      print(execl(inits[i], 'next'))
+      print(exec(inits[i], 'next'))
       break
     end
   end
 else
   if fs.exists(params.init) then
-    print(execl(params.init, 'next'))
+    print(exec(params.init, 'next'))
   else
     term.clear()
     term.setCursorPos(1,1)

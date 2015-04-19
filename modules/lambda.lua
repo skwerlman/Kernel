@@ -442,7 +442,7 @@ function ExecutableManager.open(file)
   end
 end
 
-function execl(file, ...)
+function exec(file, ...)
   local fnc, err = ExecutableManager.open(file)
   if not fnc then
     error(err)
@@ -455,7 +455,7 @@ function execl(file, ...)
   }
 
   _env.process.this.source = file
-  _env.process.this.cmdline = file .. ' ' .. table.concat({...}, ' ')
+  --_env.process.this.cmdline = file .. ' ' .. table.concat({...}, ' ')
 
   os.queueEvent('exec', file, file .. ' ' .. table.concat({...}, ' '), _env.process.this)
 
@@ -472,10 +472,35 @@ function execl(file, ...)
   return pcall(fnc, ...)
 end
 
-function execv(file, args)
-  return execl(file, unpack(args))
-end
 
+function sexec(file, ...)
+  local fnc, err = ExecutableManager.open(file)
+  if not fnc then
+    error(err)
+  end
+  local _env = {
+    ['_FILE'] = file,
+    ['process'] = {
+      ['this'] = (getfenv(2).process.this and getfenv(2).process.this or process.main):spawnSubprocess(file),
+    }
+  }
+
+  _env.process.this.source = file
+  --_env.process.this.cmdline = file .. ' ' .. table.concat({...}, ' ')
+
+
+  setmetatable(_env, {['__index'] = function(t, k)
+      if not rawget(t, k) then
+        return rawget(_G, k)
+      else
+        return rawget(t, k)
+      end
+    end
+  })
+
+  setfenv(fnc, _env)
+  return pcall(fnc, ...)
+end
 modules.module 'threads/compat' {
   ['text'] = {
     ['load'] = function()
