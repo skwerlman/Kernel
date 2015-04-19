@@ -167,7 +167,7 @@ local thread = {}
 function thread:new( f, p )
 
   local t = {}
-
+  t.tid = getRandomTardixID()
   t.state = 'running'
   t.environment = setmetatable( {}, { __index = getfenv( 2 ) } )
   if p then
@@ -175,7 +175,7 @@ function thread:new( f, p )
       t.environment.process.this = p
     else
       t.environment.process = {
-        ["this"] = p
+        ['this'] = p
       }
     end
   end
@@ -200,34 +200,39 @@ function thread:new( f, p )
       return self:type()
     end;
   } )
-
+  os.queueEvent('thread_construct, ', t.tid)
   return t
 end
 
 function thread:stop()
+  os.queueEvent('thread_stop', t.tid)
   if self.state ~= 'dead' then
     self.state = 'stopped'
   end
 end
 
 function thread:pause()
+  os.queueEvent('thread_pause', t.tid)
   if self.state == 'running' then
     self.state = 'paused'
   end
 end
 
 function thread:resume()
+  os.queueEvent('thread_resume', t.tid)
   if self.state == 'paused' then
     self.state = 'running'
   end
 end
 
 function thread:restart()
+  os.queueEvent('thread_restart', t.tid)
   self.state = 'running'
   self.co = coroutine.create( self.func )
 end
 
 function thread:update( event, ... )
+  --os.queueEvent('thread_update', self.tid, {event, ...})
   if self.state ~= 'running' then return true, self.state end -- if not running, don't update
   if self.filter ~= nil and self.filter ~= event then return true, self.filter end -- if filtering an event, don't update
 
@@ -253,9 +258,11 @@ end
 local process = {}
 
 function process:new( name )
+  local rID = getRandomTardixID()
   local p = {}
 
-  p.name = name
+  p.tid = rID
+  p.name = name or rID
   p.children = {}
 
   setmetatable( p, {
@@ -264,16 +271,17 @@ function process:new( name )
       return self:type()
     end;
   } )
-
+  os.queueEvent('process_construct', name or rID  )
   return p
 end
 
 function process:spawnThread( f, name )
+  os.queueEvent('thread_spawn', f, self.tid)
   local t = thread:new( f, self )
   if name then
     t.name = name
   else
-    t.name = getRandomString("rxyxx-yyxxx-4")
+    t.name = getRandomTardixID()
   end
   table.insert( self.children, 1, t )
   return t
@@ -283,10 +291,12 @@ end
 function process:spawnSubprocess( name )
   local p = process:new( name )
   table.insert( self.children, 1, p )
+  os.queueEvent('process_spawn', self.tid, p.tid)
   return p
 end
 
 function process:update( event, ... )
+  --os.queueEvent('process_update', self.tid, {event, ...})
   for i = #self.children, 1, -1 do
     local ok, data = self.children[i]:update( event, ... )
     if not ok then
@@ -305,24 +315,28 @@ function process:update( event, ... )
 end
 
 function process:stop()
+  os.queueEvent('process_stop', self.tid)
   for i = 1, #self.children do
     self.children[i]:stop()
   end
 end
 
 function process:pause()
+  os.queueEvent('process_pause', self.tid)
   for i = 1, #self.children do
     self.children[i]:pause()
   end
 end
 
 function process:resume()
+  os.queueEvent('process_resume', self.tid)
   for i = 1, #self.children do
     self.children[i]:resume()
   end
 end
 
 function process:restart()
+  os.queueEvent('process_restart', self.tid)
   for i = 1, #self.children do
     self.children[i]:restart()
   end
@@ -420,7 +434,7 @@ function ExecutableManager.open(file)
   end
 
   if lambda.isLambda(file) then
-    return lambda:new(file):load().runThisFunc
+    return lambda:new(file):load().runThisFunc, lambda:new(file):load().error
   elseif ExecutableManager.getIfIs(file) then
     return ExecutableManager.getIfIs(file)
   else
@@ -429,13 +443,22 @@ function ExecutableManager.open(file)
 end
 
 function execl(file, ...)
-  local fnc = ExecutableManager.open(file)
+  local fnc, err = ExecutableManager.open(file)
+  if not fnc then
+    error(err)
+  end
   local _env = {
     ['_FILE'] = file,
     ['process'] = {
-      ['this'] = process.main:spawnSubprocess(file),
+      ['this'] = (getfenv(2).process.this and getfenv(2).process.this or process.main):spawnSubprocess(file),
     }
   }
+
+  _env.process.this.source = file
+  _env.process.this.cmdline = file .. ' ' .. table.concat({...}, ' ')
+
+  os.queueEvent('exec', file, file .. ' ' .. table.concat({...}, ' '), _env.process.this)
+
   setmetatable(_env, {['__index'] = function(t, k)
       if not rawget(t, k) then
         return rawget(_G, k)
@@ -453,9 +476,9 @@ function execv(file, args)
   return execl(file, unpack(args))
 end
 
-modules.module "threads/compat" {
-  ["text"] = {
-    ["load"] = function()
+modules.module 'threads/compat' {
+  ['text'] = {
+    ['load'] = function()
       function exit()
         coroutine.yield('die')
         error()
@@ -463,7 +486,7 @@ modules.module "threads/compat" {
 
       coroutine.fire = os.queueEvent
     end,
-    ["unload"] = function()end
+    ['unload'] = function()end
   }
 }
 
@@ -480,15 +503,15 @@ local function httpWorker(file)
         h.close()
         break
       elseif data[1] == 'http_failure' then
-        coroutine.fire('fail','thttpt', unpack(table.from(data,1)))
+        os.queueEvent('fail','thttpt', unpack(table.from(data,1)))
         break
       end
     end
   end
 end
-modules.module "threads/util" {
-  ["text"] = {
-    ["load"] = function()
+modules.module 'threads/util' {
+  ['text'] = {
+    ['load'] = function()
       function http.save(url, file)
         local x = http.get(url)
         local h = fs.open(file, 'w')
@@ -507,6 +530,6 @@ modules.module "threads/util" {
         end
       end
     end,
-  ["unload"] = function()end
+  ['unload'] = function()end
   }
 }
