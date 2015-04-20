@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> 0d9357275f6b01cd7d4cb51674a73f0e05e50ad0
 --[[
 The MIT License (MIT)
 
