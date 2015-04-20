@@ -73,3 +73,13 @@ function ask(question)
   return read()
 end
 ```
+
+######Logf
+
+Log to standard output a formatted string, prepending `[T] ::` where `T` is the computer time, as returned by `os.clock`. `logf` also writes to the file `/kernel.log`.
+
+```lua
+logf('Hello, world!')
+```
+
+**NOTE:** logf does append a new line character _(`\n`)_ at the end of the stream.
