@@ -59,11 +59,15 @@ function lambda:run(...)
 end
 
 function lambda.isLambda(file)
-  local tab = readEncodedTable(file)
-  local ok, ret = pcall(function()
-    return tab.sections.head ~= nil
-  end)
-  if not ok then return false else return true end
+  if not fs.exists(file) then
+    return false
+  else
+    local tab = textutils.unserialize(readfile(file))
+    local ok, ret = pcall(function()
+      return tab.sections.head ~= nil
+    end)
+    if not ok then return false else return true end
+  end
 end
 
 local lambdawrite = Class(
@@ -434,7 +438,7 @@ function ExecutableManager.open(file)
     error()
   end
   if not fs.exists(tostring(file)) then
-    error('File ' .. file .. ' doesn\'t exist.')
+    error('File doesn\'t exist.')
   end
 
   if lambda.isLambda(file) then

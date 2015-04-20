@@ -415,26 +415,8 @@ function table.from(tab, index)
   return ret
 end
 
-function kassert(exp)
-  if (not exp) then
-    printf('Kernel assertion failed at %d!', os.clock())
-    while true do
-      coroutine.yield 'die' -- kassert from a thread should destroy itself.
-    end
-  end
-end
-
-
-function readEncodedTable(path)
-	local x = fs.open(path, 'r')
-	kassert(x)
-	local data = x.readAll()
-	x.close()
-
-
-	data = textutils.unserialize(base64.decode(data))
-
-	return data
+function kassert(exp,err)
+  return assert(exp,err)
 end
 
 
@@ -458,7 +440,7 @@ end
 function readfile(file)
   local x = fs.open(file, 'r')
   if not x then
-    error("Can not open file "..file,2)
+    error("Can not open file " .. file,2)
   end
   local ret = x.readAll()
   x.close()
@@ -480,4 +462,30 @@ end
 
 function try()
 
+end
+
+-- Librequire
+local includePath = {
+  '/', '/lib', '/usr/lib'
+}
+
+if term.isColor and term.isColor() then
+  table.insert(includePath, '/lib/adv')
+  table.insert(includePath, '/usr/lib/adv')
+end
+
+function _G.require(src)
+  assert(type(src) == 'string', 'expected string, got ' .. type(src))
+  for k, v in pairs(includePath) do
+    local str = src:gsub('%.', '/')
+    if fs.exists((fs.combine(v, str):sub(-4) == '.lua' and fs.combine(v, str) or fs.combine(v, str) .. '.lua')) then
+      local ret, err =  loadfile((fs.combine(v, str):sub(-4) == '.lua' and fs.combine(v, str) or fs.combine(v, str) .. '.lua'))
+      if not ret then
+        error(err, 2)
+      end
+
+      return ret()
+    end
+  end
+  return false, 'can not load ' .. src
 end
