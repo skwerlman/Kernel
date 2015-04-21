@@ -3,7 +3,6 @@ The MIT License (MIT)
 
 Copyright (c) 2014-2015 the TARDIX team
 
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -22,80 +21,102 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
-local ccfs = fs
-local bcfs = {}
 
-local File = Class(
-	function(self, path)
-		self.path = 	 path
-		self.size = 	 (ccfs.exists(path) and ccfs.getSize(path) or 0)
-		self.buffers = {['inp'] = {}, ['out'] = {}, ['gen'] = {} }
-		self.ops =		 {}
-		self.append =  false
-	end
-)
+local ino_mt = {["__index"] = ino_mt}
+local inodes = {}
 
-function File:setAppend()
-	self.append = true
-	return self
+function ino_mt:open(mode)
+	return fs.open(self.path, mode)
 end
 
-function File:addOperationHandler(op, func)
-	if not self.ops[op] then self.ops[op] = func end
-	return self
-end
+function inodes.inode(file)
+	if fs.exists(file) and not fs.isDir(file) then
+		local handle = fs.open(file, 'r')
+		local data   = handle.readAll()
+		local size   = fs.getSize(file)
 
-function File:queue(buf, op, data)
-	if not self.buffers then return end
-	table.insert(self.buffers[buf],{['op'] = op, ["data"] = data})
-	return self
-end
+		handle.close()
 
-function File:flush(buf)
-	if buf == 'in' then
-		local ret = {}
-		local han = fs.open(self.path, 'r')
-		for k, v in pairs(self.buffers.inp) do
-			table.insert(ret, han.readLine())
-		end
-		han.close()
-		return ret
-	elseif buf == 'out' then
-		local han = fs.open(self.path, (self.append and 'a' or 'w'))
-		for k, v in pairs(self.buffers.out) do
-			han.writeLine(v['data'])
-		end
-		han.close()
-		return 0
-	elseif buf == 'gen' then
-		for k, v in pairs(self.buffers.gen) do
-			self.ops[v[1]](table.from(v[1]))
-		end
-		return
+		local link = {["is"] = false, ["to"] = 0}
+
+		local ino = {
+			["data"] = data,
+			["size"] = size,
+			["path"] = file,
+			["link"] = link
+	 	}
+
+		setmetatable(ino, ino_mt)
+		return ino
+	else
+		return {
+			["data"] = "nodata",
+			["size"] = 0,
+			["path"] = 0,
+			["link"] = {["is"] = false, ["to"] = 0},
+			["perms"] = {
+				[-255] = { -- root
+					true, true, true
+				},
+				[0] = { -- group
+					true, true, false
+				},
+				[1] = { -- normal
+					true, true, false
+				}
+			}
+		}
 	end
 end
-
-function File:read()
-	self:queue('inp', 'read', 0)
-	return self
+function inodes.createInodeTable(dir)
+	-- serialize a directory into an inode table
+	local ret = {}
+	for k, v in pairs(listAll(dir)) do
+		ret[k] = (inode(v))
+	end
+	return ret
 end
 
-function File:write(data)
-	self:queue('out', 'write', data)
-	return self
+function inodes.link(path, from)
+	local ino = {
+		["data"] = path..':LINK:'..from,
+		["size"] = 4,
+		["path"] = path,
+		["link"] = {
+			["is"] = true,
+			["to"] = from
+		},
+		["perms"] = {
+			[-255] = { -- root
+				true, true, true
+			},
+			[0] = { -- group
+				true, true, false
+			},
+			[1] = { -- normal
+				true, true, false
+			}
+		}
+	}
+	setmetatable(ino, ino_mt)
+	return ino
 end
 
-function bcfs.open(path)
-	return File(path)
-end
-
-local _vfs = modules.module 'vfs' {
-	['text'] = {
-		['load'] = function()
-			_G.File = File
+modules.module "inodes" {
+	["text"] = {
+		["load"] = function()
+			if not _G.vfs then
+				_G.vfs = {
+					["inodes"] = inodes
+				}
+			else
+				_G.vfs.inodes = inodes
+			end
 		end,
-		['unload'] = function()
-			_G.File = nil
+		["unload"] = function()
+			if _G.vfs and _G.vfs.inodes then
+				_G.vfs.inodes = nil
+			end
 		end
 	}
 }
