@@ -32,8 +32,13 @@ _G.params = {
   ["nocolor"] = not (
     (term.isColor and term.isColor()) or (term.isColour and term.isColour() ) ),
   ["root"] = ({...})[1] and ({...})[1] or '/',
-  ["init"] = ({...})[2] and ({...})[2] or 'def'
+  ["init"] = ({...})[2] and ({...})[2] or 'def',
+  ["kms"]  = ({...})[3] and ({...})[3] or false
 }
+
+print("pre-init")
+print("kernel: " .. _G.params.root)
+print("libk: ".. fs.combine(_G.params.root,'/lib/libk.lua'))
 loadfile(fs.combine(_G.params.root,'/lib/libk.lua'))()
 
 logf('Starting the kernel (branch=next)')
