@@ -1,5 +1,45 @@
+--[[
+The MIT License (MIT)
+
+Copyright (c) 2014-2015 the TARDIX team
+
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+]]
 function _G.printf(fmt, ...)
-  print(fmt:format(...))
+  io.write(fmt:format(...))
+end
+
+-- attempt to KMS
+local monitor = peripheral.find("monitor")
+if _G.params.kms == true then
+    if monitor ~= nil then
+        monitor.clear()
+        monitor.setCursorPos(1,1)
+        monitor.write("KMS Enabled")
+    
+        term.redirect(monitor)
+    else
+        print("KMS disabled, no monitor")
+    end
+else
+    print("KMS disabled")
 end
 
 function _G.logf(fmt, ...)
@@ -7,7 +47,7 @@ function _G.logf(fmt, ...)
   x.write(('[%d] :: ' .. fmt .. '\n'):format(os.clock(), ...))
   x.close()
 
-  if _G.params.nocolor then
+  if params.nocolor then
     print(('[%d] :: ' .. fmt):format(os.clock(), ...))
   else
     io.write('[')
@@ -332,7 +372,7 @@ end
 
 local function reloadAllModules()
   unloadAllModules()
-  local list = (listAll( fs.combine(_G.params.root, '/modules')))
+  local list = (listAll( fs.combine(params.root, '/modules')))
 
   for k, v in pairs(list) do
     if not fs.isDir(v) then
@@ -390,33 +430,18 @@ function table.from(tab, index)
   return ret
 end
 
-function kassert(exp)
-  if (not exp) then
-    printf('Kernel assertion failed at %d!', os.clock())
-    while true do
-      coroutine.yield 'die' -- kassert from a thread should destroy itself.
-    end
-  end 
-end
-
-
-function readEncodedTable(path)
-	local x = fs.open(path, read)
-	kassert(x)
-	local data = x.readAll()
-	x.close()
-
-
-	data = textutils.unserialize(base64.decode(data))
-
-	return data
+function kassert(exp,err)
+  return assert(exp,err)
 end
 
 
 function table.dump(tab, prefix, key)
   if not prefix then prefix = '' end
   if not key then key = 'root' end
+  if not type(tab) == 'table' then error("Not a table!", 2) end
+
   print((('%s[%s] = {'):format(prefix, key)))
+
   for k, v in pairs(tab) do
     if type(v) == 'table' then
       table.dump(v, prefix..'\t', k)
@@ -425,4 +450,57 @@ function table.dump(tab, prefix, key)
     end
   end
   print(prefix.. '}')
+end
+
+function readfile(file)
+  local x = fs.open(file, 'r')
+  if not x then
+    error("Can not open file " .. file,2)
+  end
+  local ret = x.readAll()
+  x.close()
+  return ret
+end
+
+function getRandomString(template)
+	return string.gsub(template, '[xy]', function (c)
+	local v = (c == 'x') and math.random(0, 0xf) or math.random(8, 0xb)
+		return string.format('%x', v)
+	end)
+end
+
+function getRandomTardixID()
+  return getRandomString('xxyy:xxxx-yyyy-xxyy-xyyx')
+end
+
+-- Libexcept
+
+function try()
+
+end
+
+-- Librequire
+local includePath = {
+  '/', '/lib', '/usr/lib'
+}
+
+if term.isColor and term.isColor() then
+  table.insert(includePath, '/lib/adv')
+  table.insert(includePath, '/usr/lib/adv')
+end
+
+function _G.require(src)
+  assert(type(src) == 'string', 'expected string, got ' .. type(src))
+  for k, v in pairs(includePath) do
+    local str = src:gsub('%.', '/')
+    if fs.exists((fs.combine(v, str):sub(-4) == '.lua' and fs.combine(v, str) or fs.combine(v, str) .. '.lua')) then
+      local ret, err =  loadfile((fs.combine(v, str):sub(-4) == '.lua' and fs.combine(v, str) or fs.combine(v, str) .. '.lua'))
+      if not ret then
+        error(err, 2)
+      end
+
+      return ret()
+    end
+  end
+  return false, 'can not load ' .. src
 end

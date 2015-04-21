@@ -9,9 +9,8 @@ The full directory tree, however, is more complex. The recommended file system h
 ```
 root              (directory)
   L kernel        (directory)
-    L kernel      (directory)
-      L main.lua  (directory)
-  L tsr           (directory)
+      L main.lua  (     file)
+  L usr           (directory)
     L bin         (directory)
       L init      (     file)
       L tlc       (     file)

@@ -39,7 +39,7 @@ The VFS packed with TARDIX has several functions, but the main one, is, _you gue
 
 Oh, one more thing: **RUNTIME. MODE. MANIPULATION.** You heard right, ladies and gentleman. No more needing to open and close those pesky files over and over.
 
-Now, let's be done with the humour and START THE DOCS!
+Now, let's be done with the humor and START THE DOCS!
 
 
 *awesome music plays in the background*
