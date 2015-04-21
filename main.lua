@@ -34,6 +34,10 @@ _G.params = {
   ["root"] = ({...})[1] and ({...})[1] or '/',
   ["init"] = ({...})[2] and ({...})[2] or 'def'
 }
+
+print("pre-init")
+print("kernel: " .. _G.params.root)
+print("libk: ".. fs.combine(_G.params.root,'/lib/libk.lua'))
 loadfile(fs.combine(_G.params.root,'/lib/libk.lua'))()
 
 logf('Starting the kernel (branch=next)')
