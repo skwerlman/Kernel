@@ -26,6 +26,22 @@ function _G.printf(fmt, ...)
   io.write(fmt:format(...))
 end
 
+-- attempt to KMS
+local monitor = peripheral.find("monitor")
+if _G.params.kms == true then
+    if monitor ~= nil then
+        monitor.clear()
+        monitor.setCursorPos(1,1)
+        monitor.write("KMS Enabled")
+    
+        term.redirect(monitor)
+    else
+        print("KMS disabled, no monitor")
+    end
+else
+    print("KMS disabled")
+end
+
 function _G.logf(fmt, ...)
   local x = fs.open('/kernel.log', 'a')
   x.write(('[%d] :: ' .. fmt .. '\n'):format(os.clock(), ...))
