@@ -86,7 +86,7 @@ function lambda.isLambda(file)
   if not fs.exists(file) then
     return false
   else
-    local tab = textutils.unserialize(readfile(file))
+    local tab = textutils.unserialize(base64.decode(readfile(file)))
     local ok, ret = pcall(function()
       return tab.sections.head ~= nil
     end)
