@@ -22,13 +22,13 @@ Basic input and output is provided by the _clarti.io_ module, and contains the f
 Creating an application that interfaces with the user using _Clarti_ is easy. The simple, "Hello, what's your name?" application is implemented in one single line:
 
 ```lua
-printf("Hello, %s!", scanf("%s", 100))
+printf("Hello, %s!", read("%s", 100))
 ```
 
 Asynchronously, it is a big longer, but still simple:
 ```lua
 program.start(function()
-  printf("Hello, %s!"m scanf("%s", 100))
+  printf("Hello, %s!", read("%s", 100))
 end)
 ```
 ----
@@ -39,10 +39,6 @@ end)
 - read
 - printf
 - logf
-- scanf
-- puts
-- putd
-- write
 
 ######Print
 
@@ -83,3 +79,65 @@ logf('Hello, world!')
 ```
 
 **NOTE:** logf does append a new line character _(`\n`)_ at the end of the stream.
+
+----
+
+#####Asynchronous Programming
+
+A huge part of modern operating systems is multi-threading. This enables computers to do more then one task at the same time.
+
+In reality, the operating system is in control of switching between tasks, for example, when `thread1` opens a file, the _scheduler_ will switch to `thread2`, execute that until it yields, and then switch to every thread, before switching back to `thread1`.
+
+----
+
+#####Object Index
+
+1. libprog
+  - daemonize
+  - create
+
+
+###### libprog.daemonize
+
+While `libprog.daemonize` is not asynchronous in itself, it can help in creating event-handler threads and programs.
+
+Libprog.daemonize takes no arguments, and returns an empty `daemon`.
+
+- `libprog.daemonize():addEvent`
+  `:addEvent` creates a new event handler entry in the daemon's list of events. It takes 2 arguments, the first one being the name of the event and the second one being a handler function.
+
+  **Example:**
+    ```lua
+    local libprog = require 'libprog'
+
+    libprog.daemonize()
+      :addEvent('hello', function(event, who) printf("Hello, %s!", who) end)
+    ```
+
+  This specific example creates a new daemon, then, assigns the function `function(event, who) printf("Hello, %s!", who) end` to handle the event `hello`. The handler function can take a variable number of arguments, but the first one is the name of the event.
+
+
+- `libprog.daemonize():start`
+  `:start` creates a function to handle passed events, and runs it. It takes a variable number of arguments, and those are passed to the event-handling function.
+
+  The specific function created looks a little like this:
+  ```lua
+  local args = {...} -- make a table out of the passed arguments
+  for k, v in pairs(evs) do -- iterate over the passed event handler table
+    if args[1] == k then -- does the first argument (event name) equal the name of the event we're looking at?
+      for e, d in pairs(v) do -- It does. Call any handlers.
+        pcall(d, ...) -- Safely call.
+      end
+    end
+  end
+  ```
+
+  **Example:**
+  ```lua
+  local libprog = require 'libprog'
+
+  libprog.daemonize()
+    :addEvent('hello', function(event, who) printf("Hello, %s!", who) end)
+    :run('hello', 'World')
+  ```
+  This example creates a daemon, assigns the function to the event, and runs said function (because `"hello" == "hello"`) with the parameters _'hello', 'world'_. Can you guess what this program does? You guessed it; It prints out 'Hello, World!'.

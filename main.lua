@@ -71,6 +71,7 @@ end
 
 modules.loadAllModules()
 
+kms()
 
 -- pass control to userland
 -- hardcoded
