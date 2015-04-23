@@ -116,27 +116,10 @@ function inodes.link(path, sourceino)
 	return ino
 end
 
-modules.module "inodes" {
-	["text"] = {
-		["load"] = function()
-			if not _G.vfs then
-				_G.vfs = {
-					["inodes"] = inodes
-				}
-			else
-				_G.vfs.inodes = inodes
-			end
-		end,
-		["unload"] = function()
-			if _G.vfs and _G.vfs.inodes then
-				_G.vfs.inodes = nil
-			end
-		end
-	}
-}
 
 local vfs = {}
-function vfs.open(pat, mod) do
+
+function vfs.open(pat, mod)
 	if not vfs.mounts then
 		if fs.exists(pat) then
 			os.queueEvent('ccfs_open',pat,mod)
@@ -385,6 +368,7 @@ modules.module "vfs" {
 	["text"] = {
 		["load"] = function()
 			_G.tfs = vfs
+			_G.tfs.inodes = inodes
 		end,
 		["unload"] = function()
 			_G.tfs = nil
