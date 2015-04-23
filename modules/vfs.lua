@@ -117,7 +117,7 @@ function inodes.link(path, sourceino)
 end
 
 
-local vfs = {}
+local vfs = {["mounts"] = {}}
 
 function vfs.open(pat, mod)
 	if not vfs.mounts then
@@ -138,12 +138,14 @@ end
 
 function vfs.mount(pat, fsi)
 	table.insert(vfs.mounts, fsi)
-	fs.makeDir(pat)
 	os.queueEvent('vfs_mount', pat, fsi)
-
-	for k, v in pairs(fsi.files) do
-		local fh = v:open('w')
-		fh.write(v.data)
+	if fsi.files then
+		for k, v in pairs(fsi.files) do
+			local fh = v:open('w')
+			fh.write(v.data)
+		end
+	elseif fsi.doMount then
+		fsi:doMount(pat)
 	end
 end
 
