@@ -137,17 +137,37 @@ function vfs.open(pat, mod)
 end
 
 function vfs.mount(pat, fsi)
+	fsi.path = pat
 	table.insert(vfs.mounts, fsi)
 	os.queueEvent('vfs_mount', pat, fsi)
 	if fsi.files then
 		for k, v in pairs(fsi.files) do
-			local fh = v:open('w')
-			fh.write(v.data)
+			if v.data then
+				local fh = v:open('w')
+				fh.write(v.data)
+			end
 		end
 	elseif fsi.doMount then
 		fsi:doMount(pat)
 	end
 end
+
+function vfs.umount(pat)
+	for k, v in pairs(vfs.mounts) do
+		if v.path == pat then
+			if v.files then
+				for i, j in pairs(v.files) do
+					if i.path then
+						vfs.delete(i.path)
+					end
+				end
+			elseif v.doUmount then
+				v:umount(pat)
+			end
+		end
+	end
+end
+
 
 function vfs.list(dir)
 	if not vfs.mounts then
