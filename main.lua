@@ -28,19 +28,19 @@ term.setCursorPos(1,1)
 local _starttime = os.clock()
 fs.delete('/kernel.log')
 
-_G.params = {
-  ["nocolor"] = not (
-    (term.isColor and term.isColor()) or (term.isColour and term.isColour() ) ),
-  ["root"] = ({...})[1] and ({...})[1] or '/',
-  ["init"] = ({...})[2] and ({...})[2] or 'def',
-  ["kms"]  = ({...})[3] and ({...})[3] or false
-}
+_G.params = (...)
+if not type(_G.params) == 'table' then
+  print(('unknown type (%s) for kernel parameters. Expected table.'):format(type(_G.params)))
+end
 
-print("pre-init")
-print("kernel: " .. _G.params.root)
-print("libk: ".. fs.combine(_G.params.root,'/lib/libk.lua'))
-loadfile(fs.combine(_G.params.root,'/lib/libk.lua'))()
 
+print(textutils.serialize(_G.params))
+if not _G.params.kernel_root then
+  _G.params.kernel_root = '/'
+end
+print(_G.params.kernel_root)
+
+loadfile(fs.combine(_G.params.kernel_root, '/lib/libk.lua'))()
 logf('Starting the kernel (branch=next)')
 
 logf('TARDIX-NEXT snapshot 2015-APRIL')
@@ -61,7 +61,7 @@ local function listAll(_path, _files)
 end
 
 --logf('module worker starting')
-local list = (listAll( fs.combine(_G.params.root, '/modules')))
+local list = (listAll( fs.combine(_G.params.kernel_root, '/modules')))
 
 for k, v in pairs(list) do
   if not fs.isDir(v) then
@@ -75,7 +75,7 @@ kms()
 
 -- pass control to userland
 -- hardcoded
-if params.init == 'def' then
+if params.init == 'def' or not params.init then
   local inits = {
     '/init',
     '/sbin/init',
@@ -94,8 +94,8 @@ if params.init == 'def' then
     end
   end
 else
-  if fs.exists(params.init) then
-    print(exec(params.init, 'next'))
+  if _G.params.init and  fs.exists(_G.params.init) then
+    print(exec(_G.params.init, 'next'))
   else
     term.clear()
     term.setCursorPos(1,1)

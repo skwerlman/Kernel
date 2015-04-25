@@ -378,7 +378,7 @@ end
 
 local function reloadAllModules()
   unloadAllModules()
-  local list = (listAll( fs.combine(params.root, '/modules')))
+  local list = (listAll( fs.combine(_G.params.kernel_root, '/modules')))
 
   for k, v in pairs(list) do
     if not fs.isDir(v) then
