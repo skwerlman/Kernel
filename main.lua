@@ -33,12 +33,10 @@ if not type(_G.params) == 'table' then
   print(('unknown type (%s) for kernel parameters. Expected table.'):format(type(_G.params)))
 end
 
-
-print(textutils.serialize(_G.params))
 if not _G.params.kernel_root then
-  _G.params.kernel_root = '/'
+  print(('unknown type (nil) for root. Exiting!'))
+  while true do coroutine.yield('die') end
 end
-print(_G.params.kernel_root)
 
 loadfile(fs.combine(_G.params.kernel_root, '/lib/libk.lua'))()
 logf('Starting the kernel (branch=next)')
@@ -94,7 +92,7 @@ if params.init == 'def' or not params.init then
     end
   end
 else
-  if _G.params.init and  fs.exists(_G.params.init) then
+  if _G.params.init and fs.exists(_G.params.init) then
     print(exec(_G.params.init, 'next'))
   else
     term.clear()
