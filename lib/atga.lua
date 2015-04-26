@@ -55,28 +55,29 @@ function term.getColors()
   return unpack(term.color)
 end
 
-_G.atga = {
-  ["colors"] = {
-    [1] = colors.white,
-    [2] = colors.orange,
-    [3] = colors.magenta,
-    [4] = colors.lightBlue,
-    [5] = colors.yellow,
-    [6] = colors.lime,
-    [7] = colors.pink,
-    [8] = colors.gray,
-    [9] = colors.lightGray,
-    [10] = colors.cyan,
-    [11] = colors.purple,
-    [12] = colors.blue,
-    [13] = colors.brown,
-    [14] = colors.green,
-    [15] = colors.red,
-    [0] = colors.black
-  },
-  ["vbufs"] = {term.native()}
-}
-
+if not _G.atga then
+  _G.atga = {
+    ["colors"] = {
+      [1] = colors.white,
+      [2] = colors.orange,
+      [3] = colors.magenta,
+      [4] = colors.lightBlue,
+      [5] = colors.yellow,
+      [6] = colors.lime,
+      [7] = colors.pink,
+      [8] = colors.gray,
+      [9] = colors.lightGray,
+      [10] = colors.cyan,
+      [11] = colors.purple,
+      [12] = colors.blue,
+      [13] = colors.brown,
+      [14] = colors.green,
+      [15] = colors.red,
+      [0] = colors.black
+    },
+    ["vbufs"] = {term.native()}
+  }
+end
 if term.native() ~= term.current() then
   table.insert(atga.vbufs, term.current())
 end
@@ -224,7 +225,6 @@ function atga.printElem(elem)
   for k, vbuf in pairs(atga.vbufs) do
     vbuf.setCursorPos(unpack(elem.pos or {1,1}))
     local oldbg, oldfg = vbuf.getColors and vbuf.getColors() or colors.black, colors.white
-
     if vbuf.isColor and vbuf.isColor() then
       if elem.col and atga.colors[elem.col[1]] and atga.colors[elem.col[2]] then
         vbuf.setTextColor(atga.colors[elem.col[2]])
@@ -235,8 +235,6 @@ function atga.printElem(elem)
     vbuf.write(elem.val)
     local x, y = vbuf.getCursorPos and vbuf.getCursorPos() or 1,1
     vbuf.setCursorPos(1, y+1)
-
-
     vbuf.setTextColor(oldfg)
     vbuf.setBackgroundColor(oldbg)
   end
@@ -258,6 +256,7 @@ function atga.writeElem(elem)
 
     vbuf.setTextColor(oldfg)
     vbuf.setBackgroundColor(oldbg)
+    vbuf.write(elem.val)
   end
 end
 
@@ -269,4 +268,8 @@ function atga.addMonitor(side)
   local mon = peripheral.wrap(side)
   atga.makeVbuf(mon)
   table.insert(atga.vbufs, mon)
+end
+
+if dlspc then
+  dlspc(atga)
 end
