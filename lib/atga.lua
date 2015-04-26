@@ -195,6 +195,69 @@ function atga.write(val)
   end
 end
 
+function atga.clear()
+  for k, v in pairs(atga.vbufs) do
+    v.setTextColor(colors.white)
+    v.setBackgroundColor(colors.black)
+    v.setCursorPos(1,1)
+    v.clear()
+  end
+end
+
+function atga.setTextColor(col)
+  for k, v in pairs(atga.vbufs) do
+    atga.makeVbuf(v)
+    v.setTextColor(col)
+  end
+end
+
+function atga.setBackgroundColor(col)
+  for k, v in pairs(atga.vbufs) do
+    atga.makeVbuf(v)
+    v.setBackgroundColor(col)
+  end
+end
+
+function atga.printElem(elem)
+  for k, vbuf in pairs(atga.vbufs) do
+    print('h')
+    vbuf.setCursorPos(unpack(elem.pos))
+
+    if vbuf.isColor and vbuf.isColor() then
+      if elem.col and atga.colors[elem.col[1]] and atga.colors[elem.col[2]] then
+        vbuf.setTextColor(atga.colors[elem.col[2]])
+        vbuf.setBackgroundColor(atga.colors[elem.col[1]])
+      end
+    end
+
+    vbuf.write(elem.val)
+    local x, y = vbuf.getCursorPos and vbuf.getCursorPos() or 1,1
+    vbuf.setCursorPos(1, y+1)
+  end
+end
+
+
+function atga.writeElem(elem)
+  for k, vbuf in pairs(atga.vbufs) do
+    print('h')
+    vbuf.setCursorPos(unpack(elem.pos))
+
+    if vbuf.isColor and vbuf.isColor() then
+      if elem.col and atga.colors[elem.col[1]] and atga.colors[elem.col[2]] then
+        vbuf.setTextColor(atga.colors[elem.col[2]])
+        vbuf.setBackgroundColor(atga.colors[elem.col[1]])
+      end
+    end
+
+    vbuf.write(elem.val)
+  end
+end
+
+function atga.printe(x, y, b, f, v)
+  atga.printElem(atga.makeElement(x, y, b, f, v))
+end
+
+
 function atga.addMonitor(side)
   local mon = peripheral.wrap(side)
   atga.makeVbuf(mon)
