@@ -22,3 +22,7 @@ function alloc(size)
 
   return ret
 end
+
+if dlexp then
+  dlexp('alloc', alloc)
+end

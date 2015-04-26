@@ -475,7 +475,7 @@ function getRandomString(template)
 end
 
 function getRandomTardixID()
-  return getRandomString('xxyy:xxxx-yyyy-xxyy-xyyx')
+  return ({getRandomString('xxyy:xxxx-yyyy-xxyy-xyyx')})[1]
 end
 
 -- Libexcept
