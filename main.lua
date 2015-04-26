@@ -39,6 +39,8 @@ if not _G.params.kernel_root then
 end
 
 loadfile(fs.combine(_G.params.kernel_root, '/lib/libk.lua'))()
+loadfile(fs.combine(_G.params.kernel_root, '/lib/atga.lua'))()
+
 logf('Starting the kernel (branch=next)')
 
 logf('TARDIX-NEXT snapshot 2015-APRIL')
