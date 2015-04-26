@@ -509,3 +509,12 @@ function _G.require(src)
   end
   return false, 'can not load ' .. src
 end
+
+
+function dodir(path)
+  for k, v in pairs(listAll(path)) do
+    if not fs.isDir(v) and fs.exists(v) then
+      dofile(v)
+    end
+  end
+end
