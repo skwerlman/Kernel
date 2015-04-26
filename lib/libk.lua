@@ -29,18 +29,17 @@ end
 
 -- attempt to KMS
 function kms()
-  local monitor = peripheral.find("monitor")
-  if _G.params.kms == true then
-      if monitor ~= nil then
-          monitor.clear()
-          monitor.setCursorPos(1,1)
-
-          term.redirect(monitor)
-      else
-          print("KMS disabled, no monitor")
+  for k, v in pairs(peripheral.getNames()) do
+    if peripheral.getType(v) == 'monitor' then
+      print(v)
+      if not atga then
+        dofile(fs.combine(_G.params.kernel_root, 'lib/atga.lua'))
+        if not atga then
+          print("Error trying to load libatga.")
+        end
       end
-  else
-      print("KMS disabled")
+      atga.addMonitor(v)
+    end
   end
 end
 
@@ -476,7 +475,7 @@ function getRandomString(template)
 end
 
 function getRandomTardixID()
-  return getRandomString('xxyy:xxxx-yyyy-xxyy-xyyx')
+  return ({getRandomString('xxyy:xxxx-yyyy-xxyy-xyyx')})[1]
 end
 
 -- Libexcept
@@ -509,4 +508,13 @@ function _G.require(src)
     end
   end
   return false, 'can not load ' .. src
+end
+
+
+function dodir(path)
+  for k, v in pairs(listAll(path)) do
+    if not fs.isDir(v) and fs.exists(v) then
+      dofile(v)
+    end
+  end
 end

@@ -39,7 +39,7 @@ if not _G.params.kernel_root then
 end
 
 loadfile(fs.combine(_G.params.kernel_root, '/lib/libk.lua'))()
-loadfile(fs.combine(_G.params.kernel_root, '/lib/atga.lua'))()
+dodir(fs.combine(_G.params.kernel_root, '/lib/'))
 
 logf('Starting the kernel (branch=next)')
 
