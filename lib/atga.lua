@@ -139,7 +139,7 @@ end
 
 function atga.makeVbuf(vbuf)
   vbuf.color = {colors.black, colors.white}
-
+  vbuf.identifier = getRandomTardixID()
   local _oldsetcol = vbuf.setTextColor
 
   function vbuf.setTextColor(color)
@@ -256,7 +256,6 @@ end
 function atga.printe(x, y, b, f, v)
   atga.printElem(atga.makeElement(x, y, b, f, v))
 end
-
 
 function atga.addMonitor(side)
   local mon = peripheral.wrap(side)
