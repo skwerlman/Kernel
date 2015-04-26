@@ -116,8 +116,9 @@ function inodes.link(path, sourceino)
 	return ino
 end
 
-
-local vfs = {["mounts"] = {}}
+if not _G.vfs then
+	_G.vfs = {["mounts"] = {}}
+end
 
 function vfs.open(pat, mod)
 	if not vfs.mounts then
@@ -386,14 +387,6 @@ function vfs.getDir(dir)
 	end
 end
 
-modules.module "vfs" {
-	["text"] = {
-		["load"] = function()
-			_G.tfs = vfs
-			_G.tfs.inodes = inodes
-		end,
-		["unload"] = function()
-			_G.tfs = nil
-		end
-	}
-}
+if dlspc then
+	dlspc(vfs)
+end
