@@ -475,7 +475,7 @@ function getRandomString(template)
 end
 
 function getRandomTardixID()
-  return getRandomString('xxyy:xxxx-yyyy-xxyy-xyyx')
+  return ({getRandomString('xxyy:xxxx-yyyy-xxyy-xyyx')})[1]
 end
 
 -- Libexcept
@@ -508,4 +508,13 @@ function _G.require(src)
     end
   end
   return false, 'can not load ' .. src
+end
+
+
+function dodir(path)
+  for k, v in pairs(listAll(path)) do
+    if not fs.isDir(v) and fs.exists(v) then
+      dofile(v)
+    end
+  end
 end
