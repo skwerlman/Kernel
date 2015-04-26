@@ -518,3 +518,39 @@ function dodir(path)
     end
   end
 end
+
+function tabsiz(tab)
+  local ret = 1
+  for k, v in ipairs(tab) do
+    ret = ret + 1
+  end
+
+  return ret
+end
+
+function table.size(tab)
+  return tabsiz(tab)
+end
+
+function panic(msg)
+  term.setCursorPos(1,1); term.clear()
+  local ptemp = [[
+  Kernel Panic - System Halted!
+
+  A critical error (code: %s) has occured and TARDIX has protected your computer by shutting down.
+
+  Guru meditation:
+
+  Number of _G entries: %d
+  ATGA Dump:
+    Exists? %s
+    Vbufs:  %d
+  ]]
+  print(ptemp:format(msg,
+    tabsiz(_G),
+    atga and "yes" or "no",
+    atga.vbufs and tabsiz(atga.vbufs) or 0))
+  while true do
+    (function() coroutine.yield() end)()
+  end
+end

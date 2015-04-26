@@ -1,12 +1,3 @@
-function tabsiz(tab)
-  local ret = 1
-  for k, v in ipairs(tab) do
-    ret = ret + 1
-  end
-
-  return ret
-end
-
 function alloc(size)
   local ret = {}
   setmetatable(ret, {

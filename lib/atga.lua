@@ -264,6 +264,10 @@ function atga.printe(x, y, b, f, v)
   atga.printElem(atga.makeElement(x, y, b, f, v))
 end
 
+function atga.putpx(x, y, col)
+  atga.printElem(atga.makeElement(x, y, col, 1, ' '))
+end
+
 function atga.addMonitor(side)
   local mon = peripheral.wrap(side)
   atga.makeVbuf(mon)
