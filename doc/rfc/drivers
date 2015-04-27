@@ -1,0 +1,60 @@
+This document covers the idea of a driver API standard for the TARDIX kernel.
+Authors:  <s3@9600-baud.net>
+Revision: 2014031701
+
+1. DEFINITION
+A TARDIX kernel driver is a (re)loadable module that has access to the standard 
+TARDIX kernel API (It exists in kernel space) and makes use of driver role
+'mixins' which provide both compliant functionality and identification to the
+kernel.
+
+2. SYNOPSIS
+
+-- A simple driver that does nothing particularly useful:
+
+local _DRIVER = class(
+  function(self)
+    kprintf("Hello World from ", self.name")
+  end
+)
+
+_DRIVER:include('driver') -- Mandatory. provides prerequisite functions.
+_DRIVER:name('My fancy example driver')
+
+return _DRIVER
+
+3. MIXINS
+Mixins are provided by the LOOP library included with the TARDIX kernel. Mixins
+are quite important in the use of the sysfs filesystem to identify and handle
+each driver loaded in the kernel. The kernel API itself also makes use of
+mixins by providing a function allowing the quick look up of drivers that
+consume particular mixins known as drivers_by_role(). By specifying a mixin as a
+string to the first parameter of the function, drivers_by_role() will return a
+table of all drivers that consume that mixin.
+
+For example:
+my dancing_drivers = drivers_by_role('dancing') -- return all drivers that dance
+
+Developers are encouraged to provide their own mixins to help enrich the
+collection of roles that drivers can consume.
+
+The driver mixin
+----------------
+
+The following functions should be provided by the 'driver' mixin:
+
+init() - called when the driver has finished being registered in the kernel. The
+default behavior of this function just returns and it is not mandatory to
+overload this function.
+
+name() - useful for kernel logging. Please provide a name for your driver. In
+the future, mixins will be powerful enough to require that the consuming class
+implement a particular function in order for the mixin to become consumed,
+therefore complying with this request should help prevent any future headaches.
+There is no particular format as long as the name is just a string of some sort
+and may contain spaces or anything a string can handle. The default
+implementation just returns an empty string.
+
+... More features to come.
+
+4. To be continued...
