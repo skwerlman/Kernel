@@ -1,2 +1,0 @@
-TARDIX Kernel `Next`
---------------------
