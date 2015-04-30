@@ -137,7 +137,7 @@ end
 
 if fs.exists(fs.combine(kRoot, '/core/events')) then
   for k,v in pairs(fs.list(fs.combine(kRoot, '/core/events'))) do
-    threading.scheduler:spawnThread(loadfile((fs.combine(fs.combine(kRoot, '/core/events'), v))))
+    spawn(fs.combine(fs.combine(kRoot, '/core/events'), v))
   end
 end
 
