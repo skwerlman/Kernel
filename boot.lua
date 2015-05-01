@@ -59,6 +59,13 @@ for k, v in pairs(_cmdlin1) do
   end
 end
 
+function string.randomize(template)
+	return string.gsub(template, '[xy]', function (c)
+	local v = (c == 'x') and math.random(0, 0xf) or math.random(8, 0xb)
+		return string.format('%x', v)
+	end)
+end
+
 
 ----------------------------------------------------------------------------------------------------------
 
@@ -135,14 +142,21 @@ else
   end
 end
 
+
+exec(fs.combine(kRoot, '/core/kthread.lua'))
+
 if fs.exists(fs.combine(kRoot, '/core/events')) then
-  for k,v in pairs(fs.list(fs.combine(kRoot, '/core/events'))) do
-    spawn(fs.combine(fs.combine(kRoot, '/core/events'), v))
+  for k, v in pairs(fs.list(fs.combine(kRoot, '/core/events'))) do
+    kthread.addFile(fs.combine(fs.combine(kRoot,'/core/events'), v))
   end
 end
 
 while true do
   if threading then
-    threading.scheduler:update(coroutine.yield())
+    local data = {coroutine.yield()}
+    if data[1] == 'terminate' then
+      error()
+    end
+    threading.scheduler:update(unpack(data))
   end
 end

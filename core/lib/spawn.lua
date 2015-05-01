@@ -15,9 +15,9 @@ end
 return function(file)
   if threading then
     if getfenv(2).threading and getfenv(2).threading.this then
-      return getfenv(2).threading.this:spawnThread(doFindMain(loadfile(file)))
+      return getfenv(2).threading.this:spawnThread(doFindMain(loadfile(file)), file)
     else
-      return threading.scheduler:spawnThread(doFindMain(loadfile(file)))
+      return threading.scheduler:spawnThread(doFindMain(loadfile(file)), file)
     end
   end
 end

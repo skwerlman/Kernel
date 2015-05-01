@@ -11,18 +11,15 @@ local function doExec(src, fn, ...)
 
   if threading then
     if getfenv(2).threading.this then
-      env.threading = {
-        ["this"] = getfenv(2).threading.this:spawnSubprocess(tostring(fn))
-      }
-    else
-      env.threading = {
-        ["this"] = threading.scheduler:spawnSubprocess(tostring(fn))
-      }
+      env.threading.this = getfenv(2).threading.this:spawnSubprocess(src)
+    elseif threading.scheduler then
+      env.threading = threading
+      env.threading.this = threading.scheduler:spawnSubprocess(src)
     end
   end
 
   env._FILE = src
-  
+
   setfenv(fn, renv)
   local ret, err = pcall(fn, ...)
 
@@ -35,7 +32,7 @@ local function doLoad(fil)
   return loadfile(fil)
 end
 
-local function doFindMain(fnc)
+local function doFindMain(src, fnc)
   local env = {}
   setmetatable(env, {["__index"] = _G})
 
@@ -43,12 +40,12 @@ local function doFindMain(fnc)
   pcall(fnc)
 
   if not env.main or not type(env.main) == 'function' then
-    error('no public main function', 2)
+    error('no public main function ' .. src, 2)
   else
     return env.main
   end
 end
 
 return function(file, ...)
-  doExec(file, doFindMain(doLoad(file)), ...)
+  doExec(file, doFindMain(file, doLoad(file)), ...)
 end
