@@ -12,12 +12,20 @@ local function doFindMain(fnc)
   end
 end
 
-return function(file)
+return function(fileOrFunc)
   if threading then
+    if type(fileOrFunc) == 'string' then
+      if getfenv(2).threading and getfenv(2).threading.this then
+        return getfenv(2).threading.this:spawnThread(doFindMain(loadfile(fileOrFunc)), fileOrFunc)
+      else
+        return threading.scheduler:spawnThread(doFindMain(loadfile(fileOrFunc)), fileOrFunc)
+      end
+    end
+  elseif type(fileOrFunc) == 'function' then
     if getfenv(2).threading and getfenv(2).threading.this then
-      return getfenv(2).threading.this:spawnThread(doFindMain(loadfile(file)), file)
+      return getfenv(2).threading.this:spawnThread(fileOrFunc, fileOrFunc)
     else
-      return threading.scheduler:spawnThread(doFindMain(loadfile(file)), file)
+      return threading.scheduler:spawnThread(fileOrFunc, fileOrFunc)
     end
   end
 end

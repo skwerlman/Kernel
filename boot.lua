@@ -114,6 +114,14 @@ if exec then
     '/usr/sbin/init',
     '/usr/bin/init',
     '/usr/lib/init',
+    '/init.lua',
+    '/sbin/init.lua',
+    '/bin/init.lua',
+    '/lib/init.lua',
+    '/usr/init.lua',
+    '/usr/sbin/init.lua',
+    '/usr/bin/init.lua',
+    '/usr/lib/init.lua',
   }
 
   for i = 1, #inits do
@@ -132,7 +140,16 @@ else
     '/usr/sbin/init',
     '/usr/bin/init',
     '/usr/lib/init',
+    '/init.lua',
+    '/sbin/init.lua',
+    '/bin/init.lua',
+    '/lib/init.lua',
+    '/usr/init.lua',
+    '/usr/sbin/init.lua',
+    '/usr/bin/init.lua',
+    '/usr/lib/init.lua',
   }
+
 
   for i = 1, #inits do
     if fs.exists(inits[i]) then
