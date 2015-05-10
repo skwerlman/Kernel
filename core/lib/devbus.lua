@@ -65,7 +65,7 @@ function devbus.getMethods(side)
 end
 
 function devbus.hasDriver(side)
-  return devbus.assigned[side] ~= nil
+  return devbus.assigned and devbus.assigned[side]
 end
 
 function devbus.discover()
