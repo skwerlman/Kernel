@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
 local kthread = {
-  ["hans"] = {}
+  ['hans'] = {}
 }
 
 function kthread.addFunctions(tab)
@@ -39,7 +39,7 @@ end
 
 local function doFindFncs(fnc)
   local env = {}
-  setmetatable(env, {["__index"] = _G})
+  setmetatable(env, {['__index'] = _G})
 
   setfenv(fnc, env)
   pcall(fnc)

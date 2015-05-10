@@ -60,7 +60,7 @@ end
 
 local function doFindMain(src, fnc)
   local env = {}
-  setmetatable(env, {["__index"] = _G})
+  setmetatable(env, {['__index'] = _G})
   setfenv(fnc, env)
   pcall(fnc)
 
