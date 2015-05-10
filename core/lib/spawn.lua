@@ -43,16 +43,17 @@ return function(fileOrFunc)
       else
         return threading.scheduler:spawnThread(doFindMain(loadfile(fileOrFunc)), fileOrFunc)
       end
-    end
-  elseif type(fileOrFunc) == 'function' then
-    if getfenv(2).threading and getfenv(2).threading.this then
-      return getfenv(2).threading.this:spawnThread(fileOrFunc, fileOrFunc)
-    else
-      return threading.scheduler:spawnThread(fileOrFunc, fileOrFunc)
+    elseif type(fileOrFunc) == 'function' then
+      if getfenv(2).threading and getfenv(2).threading.this then
+        return getfenv(2).threading.this:spawnThread(fileOrFunc, fileOrFunc)
+      else
+        return threading.scheduler:spawnThread(fileOrFunc, fileOrFunc)
+      end
     end
   else -- run directly one time
-    local toRun = (type(fileOrFunc) == 'string' and loadfile(fileOrFunc) or fileOrFunc)
-    local wrap = coroutine.wrap(toRun)
-    wrap()
+      local toRun = (type(fileOrFunc) == 'string' and loadfile(fileOrFunc) or fileOrFunc)
+      local wrap = coroutine.wrap(toRun)
+      wrap()
+    end
   end
 end
