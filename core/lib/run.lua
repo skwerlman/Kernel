@@ -21,6 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
+
+local run = {}
+
 local function doExec(src, fn, ...)
   local env = {}
   local renv = setmetatable( {}, {
@@ -69,6 +72,53 @@ local function doFindMain(src, fnc)
   end
 end
 
-return function(file, ...)
+function run.exec(file, ...)
   doExec(file, doFindMain(file, doLoad(file)), ...)
 end
+
+function run.spawn(fileOrFunc)
+  if threading then -- spawn a thread
+    if type(fileOrFunc) == 'string' then
+      if getfenv(2).threading and getfenv(2).threading.this then
+        return getfenv(2).threading.this:spawnThread(doFindMain(loadfile(fileOrFunc)), fileOrFunc)
+      else
+        return threading.scheduler:spawnThread(doFindMain(loadfile(fileOrFunc)), fileOrFunc)
+      end
+    elseif type(fileOrFunc) == 'function' then
+      if getfenv(2).threading and getfenv(2).threading.this then
+        return getfenv(2).threading.this:spawnThread(fileOrFunc, fileOrFunc)
+      else
+        return threading.scheduler:spawnThread(fileOrFunc, fileOrFunc)
+      end
+    end
+  else -- run directly one time
+      local toRun = (type(fileOrFunc) == 'string' and loadfile(fileOrFunc) or fileOrFunc)
+      local wrap = coroutine.wrap(toRun)
+      wrap()
+    end
+  end
+end
+
+function run.spawnp(fof)
+  local toRun = (type(fof) == 'string' and
+    loadfile(fof) or (type(fof) == 'function' and fof or function() end))
+
+  if threading then
+    local newp = (((getfenv(2).threading and getfenv(2).threading.this) and
+      getfenv(2).threading.this:spawnSubprocess(tostring(fof)) or threading.scheduler:spawnSubprocess(tostring(fof))))
+    local thread = newp:spawnThread(toRun, tostring(toRun))
+
+    if getfenv(2).threading.this then
+      thread.environment.threading.this = getfenv(2).threading.this:spawnSubprocess(src)
+    elseif threading.scheduler then
+      thread.environment.threading = threading
+      thread.environment.threading.this = threading.scheduler:spawnSubprocess(src)
+    end
+
+    return newp
+  else
+    return false
+  end
+end
+
+return run
