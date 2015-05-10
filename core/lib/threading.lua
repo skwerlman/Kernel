@@ -28,7 +28,7 @@ local ret = {
 
 function ret.thread:new( f, p )
   local t = {}
-  t.tid = string.randomize and string.randomize("xxyy:xxyy-xxyy-xxxx-yyyy@xxyy-xxyy-yyxx-yyxx") or math.random()
+  t.tid = string.randomize and string.randomize("xxyy:xxyy-xxxx@xxyy") or math.random()
   t.state = 'running'
   t.environment = setmetatable( {}, { __index = getfenv( 2 ) } )
   if p then
@@ -119,7 +119,7 @@ end
 local process = {}
 
 function ret.process:new( name )
-  local rID = string.randomize and string.randomize("xxyy:xxyy-xxyy-xxxx-yyyy@xxyy-xxyy-yyxx") or math.random()
+  local rID = string.randomize and string.randomize("xxyy:xxyy-xxxx@xxyy") or math.random()
   local p = {}
 
   p.tid = rID
@@ -142,7 +142,7 @@ function ret.process:spawnThread( f, name )
   if name then
     t.name = name
   else
-    t.name = string.randomize and string.randomize("xxyy:xxyy-xxyy-xxxx-yyyy@xxyy-xxyy-yyxx") or math.random()
+    t.name = string.randomize and string.randomize("xxyy:xxyy-xxxx@xxyy") or math.random()
   end
   table.insert( self.children, 1, t )
   return t
