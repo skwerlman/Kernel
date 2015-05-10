@@ -66,10 +66,8 @@ function string.randomize(template)
 	end)
 end
 
-
 ----------------------------------------------------------------------------------------------------------
-
-local kRoot = pcmdline['kernel_root']
+_G.kRoot = pcmdline['kernel_root']
 
 if fs.exists(fs.combine(kRoot, '/core/lib')) then
   for k,v in pairs(fs.list(fs.combine(kRoot, '/core/lib'))) do

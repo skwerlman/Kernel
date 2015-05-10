@@ -21,20 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
-function catch(event, name, ...)
-  if event == 'syscall' then
-    if _G['tardix_sys_'..name] then
-      _G['tardix_sys_'..name](...)
-    elseif syscalls['sys_'..name] then
-      syscalls['sys_'..name](...)
-    elseif syscalls[name] then
-      syscalls[name](...)
-    else
-      os.queueEvent('syscall_failure', 'unknown', name)
-      printError('unknown ' .. name)
-      for k, v in pairs(syscalls and syscalls or {}) do
-        print(k)
-      end
-    end
-  end
-end
+
+local arguments = {...}
+print(table.concat(arguments, ' '))

@@ -1,3 +1,26 @@
+--[[
+The MIT License (MIT)
+
+Copyright (c) 2014-2015 the TARDIX team
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+]]
 local ret = {
   thread = {},
   process = {},
@@ -5,7 +28,7 @@ local ret = {
 
 function ret.thread:new( f, p )
   local t = {}
-  t.tid = string.randomize and string.randomize("xxyy:xxyy-xxyy-xxxx-yyyy@xxyy-xxyy") or "xxyy:xxyy-xxyy-xxxx-yyyy@xxyy-xxyy"
+  t.tid = string.randomize and string.randomize("xxyy:xxyy-xxyy-xxxx-yyyy@xxyy-xxyy") or math.random()
   t.state = 'running'
   t.environment = setmetatable( {}, { __index = getfenv( 2 ) } )
   if p then
@@ -96,7 +119,7 @@ end
 local process = {}
 
 function ret.process:new( name )
-  local rID = string.randomize and string.randomize("xxyy:xxyy-xxyy-xxxx-yyyy@xxyy-xxyy") or "xxyy:xxyy-xxyy-xxxx-yyyy@xxyy-xxyy"
+  local rID = string.randomize and string.randomize("xxyy:xxyy-xxyy-xxxx-yyyy@xxyy-xxyy") or math.random()
   local p = {}
 
   p.tid = rID
@@ -119,7 +142,7 @@ function ret.process:spawnThread( f, name )
   if name then
     t.name = name
   else
-    t.name = string.randomize and string.randomize("xxyy:xxyy-xxyy-xxxx-yyyy@xxyy-xxyy") or "xxyy:xxyy-xxyy-xxxx-yyyy@xxyy-xxyy"
+    t.name = string.randomize and string.randomize("xxyy:xxyy-xxyy-xxxx-yyyy@xxyy-xxyy") or math.random()
   end
   table.insert( self.children, 1, t )
   return t
@@ -204,5 +227,6 @@ end
 
 ret.scheduler = ret.process:new('scheduler')
 
+coroutine.fire = os.queueEvent
 
 return ret
