@@ -32,9 +32,6 @@ function catch(event, name, ...)
     else
       os.queueEvent('syscall_failure', 'unknown', name)
       printError('unknown ' .. name)
-      for k, v in pairs(syscalls and syscalls or {}) do
-        print(k)
-      end
     end
   end
 end

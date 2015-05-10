@@ -28,7 +28,6 @@ local kthread = {
 function kthread.addFunctions(tab)
   assert(type(tab) == 'table', 'kthread.addFunctions expects a table of functions')
   for k, v in pairs(tab) do
-    print(k)
     assert(type(v) == 'function', 'kthread.addFunctions expects a table of functions')
     table.insert(kthread.hans, v)
   end

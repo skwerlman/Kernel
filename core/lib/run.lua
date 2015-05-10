@@ -61,12 +61,11 @@ end
 local function doFindMain(src, fnc)
   local env = {}
   setmetatable(env, {["__index"] = _G})
-
   setfenv(fnc, env)
   pcall(fnc)
 
   if not env.main or not type(env.main) == 'function' then
-    error('no public main function ' .. src, 2)
+    error('no public main function ' .. tostring(src), 2)
   else
     return env.main
   end
@@ -80,9 +79,9 @@ function run.spawn(fileOrFunc)
   if threading then -- spawn a thread
     if type(fileOrFunc) == 'string' then
       if getfenv(2).threading and getfenv(2).threading.this then
-        return getfenv(2).threading.this:spawnThread(doFindMain(loadfile(fileOrFunc)), fileOrFunc)
+        return getfenv(2).threading.this:spawnThread(doFindMain(fileOrFunc, loadfile(fileOrFunc)), fileOrFunc)
       else
-        return threading.scheduler:spawnThread(doFindMain(loadfile(fileOrFunc)), fileOrFunc)
+        return threading.scheduler:spawnThread(doFindMain(fileOrFunc, loadfile(fileOrFunc)), fileOrFunc)
       end
     elseif type(fileOrFunc) == 'function' then
       if getfenv(2).threading and getfenv(2).threading.this then
@@ -92,10 +91,9 @@ function run.spawn(fileOrFunc)
       end
     end
   else -- run directly one time
-      local toRun = (type(fileOrFunc) == 'string' and loadfile(fileOrFunc) or fileOrFunc)
-      local wrap = coroutine.wrap(toRun)
-      wrap()
-    end
+    local toRun = (type(fileOrFunc) == 'string' and loadfile(fileOrFunc) or fileOrFunc)
+    local wrap = coroutine.wrap(toRun)
+    wrap()
   end
 end
 

@@ -27,6 +27,8 @@ dynamic link it into memory,
 run it.
 ]]
 
+term.setCursorPos(1,1)
+term.clear()
 
 local kcmdline = table.concat({...}, ' ')
 
@@ -102,7 +104,7 @@ function kreq(path)
 end
 
 
-if exec then
+if run.exec then
   local inits = {
     '/init',
     '/sbin/init',
@@ -124,7 +126,7 @@ if exec then
 
   for i = 1, #inits do
     if fs.exists(inits[i]) then
-      spawn(inits[i])
+      run.spawn(inits[i])
       break
     end
   end
@@ -158,7 +160,7 @@ else
 end
 
 
-exec(fs.combine(kRoot, '/core/kthread.lua'))
+run.exec(fs.combine(kRoot, '/core/kthread.lua'))
 
 if fs.exists(fs.combine(kRoot, '/core/events')) then
   for k, v in pairs(fs.list(fs.combine(kRoot, '/core/events'))) do
