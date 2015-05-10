@@ -68,6 +68,16 @@ function devbus.hasDriver(side)
   return devbus.assigned ~= nil and
     devbus.assigned[side] ~= nil
 end
+
+function devbus.can(side, thing)
+  for k, v in pairs(devbus.getMethods(side)) do
+    if v == thing then
+      return true
+    end
+  end
+  return false
+end
+
 function devbus.discover()
   local ret = {}
   for k, v in pairs(peripheral.getNames()) do
@@ -77,11 +87,16 @@ function devbus.discover()
       ['hasDriver'] = devbus.hasDriver(v),
       ['call'] = function(fn, ...)
         return devbus.call(v, fn, ...)
+      end,
+      ['can'] = function(thing)
+        return devbus.can(v, thing)
       end
     }
   end
 
   return ret
 end
+
+devbus.devices = devbus.discover()
 
 return devbus
