@@ -65,9 +65,9 @@ function devbus.getMethods(side)
 end
 
 function devbus.hasDriver(side)
-  return devbus.assigned and devbus.assigned[side]
+  return devbus.assigned ~= nil and
+    devbus.assigned[side] ~= nil
 end
-
 function devbus.discover()
   local ret = {}
   for k, v in pairs(peripheral.getNames()) do
