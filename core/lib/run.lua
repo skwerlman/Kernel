@@ -24,6 +24,28 @@ THE SOFTWARE.
 
 local run = {}
 
+run.dailin = {}
+local function doFindFncs(fnc)
+  local env = {}
+  setmetatable(env, {['__index'] = _G})
+
+  setfenv(fnc, env)
+  pcall(fnc)
+  local ret = {}
+  for k, v in pairs(env) do
+    if type(v) == 'function' then
+      ret[k] = v
+    end
+  end
+  return ret
+end
+
+function run.dailin.link(fof)
+  return doFindFncs((type(fof) == 'string' and
+    loadfile(fof) or (type(fof) == 'function' and fof or function() end)))
+end
+
+
 local function doExec(src, fn, ...)
   local env = {}
   local renv = setmetatable( {}, {
@@ -58,30 +80,17 @@ local function doLoad(fil)
   return loadfile(fil)
 end
 
-local function doFindMain(src, fnc)
-  local env = {}
-  setmetatable(env, {['__index'] = _G})
-  setfenv(fnc, env)
-  pcall(fnc)
-
-  if not env.main or not type(env.main) == 'function' then
-    error('no public main function ' .. tostring(src), 2)
-  else
-    return env.main
-  end
-end
-
 function run.exec(file, ...)
-  doExec(file, doFindMain(file, doLoad(file)), ...)
+  doExec(file, run.dailin.link(file)['main'], ...)
 end
 
 function run.spawn(fileOrFunc)
   if threading then -- spawn a thread
     if type(fileOrFunc) == 'string' then
       if getfenv(2).threading and getfenv(2).threading.this then
-        return getfenv(2).threading.this:spawnThread(doFindMain(fileOrFunc, loadfile(fileOrFunc)), fileOrFunc)
+        return getfenv(2).threading.this:spawnThread(run.dailin.link(fileOrFunc)['main'] or error('failed ' .. fileOrFunc), fileOrFunc)
       else
-        return threading.scheduler:spawnThread(doFindMain(fileOrFunc, loadfile(fileOrFunc)), fileOrFunc)
+        return threading.scheduler:spawnThread(run.dailin.link(fileOrFunc)['main'] or error('failed ' .. fileOrFunc), fileOrFunc)
       end
     elseif type(fileOrFunc) == 'function' then
       if getfenv(2).threading and getfenv(2).threading.this then
@@ -118,5 +127,6 @@ function run.spawnp(fof)
     return false
   end
 end
+
 
 return run

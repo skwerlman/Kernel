@@ -159,6 +159,30 @@ else
   end
 end
 
+_G.kthread = {
+  ['hans'] = {}
+}
+
+function kthread.addFunctions(tab)
+  assert(type(tab) == 'table', 'kthread.addFunctions expects a table of functions')
+  for k, v in pairs(tab) do
+    assert(type(v) == 'function', 'kthread.addFunctions expects a table of functions')
+    table.insert(kthread.hans, v)
+  end
+end
+
+function kthread.getHandlers()
+  return kthread.hans
+end
+
+
+function kthread.addFile(file)
+  local ok, err = loadfile(file)
+  if not ok then
+    error(err)
+  end
+  kthread.addFunctions(run.dailin.link(ok))
+end
 
 run.exec(fs.combine(kRoot, '/core/kthread.lua'))
 
