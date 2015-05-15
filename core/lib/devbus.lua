@@ -33,6 +33,8 @@ local _peripheral = (function(tab)
 
 
 function devbus.assign(name, fun)
+  os.queueEvent('devbus', 'assign', name, fun)
+
   assert(type(name) == 'string', 'expected string, got ' .. type(name))
   assert(type(fun) == 'function', 'expected function, got ' .. type(fun))
   devbus.assigned[name] = fun
@@ -43,20 +45,24 @@ function devbus.assign(name, fun)
 end
 
 function devbus.wrap(side)
+  os.queueEvent('devbus', 'wrap', side)
   local name = _peripheral.getType(side)
   if devbus.assigned and devbus.assigned[name] then
     return devbus.assigned[name](side)
   else
     return _peripheral.wrap(side)
   end
+
 end
 
 function devbus.call(side, fn, ...)
+  os.queueEvent('devbus', 'call', side, fn, {...})
   local wrapd = devbus.wrap(side)
   wrapd[fn](wrapd, ...)
 end
 
 function devbus.getMethods(side)
+  os.queueEvent('devbus', 'getmethods', side)
   local wrapd = devbus.wrap(side)
   local ret = {}
   for k, v in pairs(wrapd) do
@@ -67,16 +73,18 @@ function devbus.getMethods(side)
 end
 
 function devbus.getType(side)
+  os.queueEvent('devbus', 'gettype', side)
   return _peripheral.getType(side)
 end
 
 function devbus.hasDriver(side)
-
+  os.queueEvent('devbus', 'hasdriver', side)
   return devbus.assigned ~= nil and
     devbus.assigned[_peripheral.getType(side)] ~= nil
 end
 
 function devbus.can(side, thing)
+  os.queueEvent('devbus', 'can', side, thing)
   for k, v in pairs(devbus.getMethods(side)) do
     if v == thing then
       return true
@@ -86,6 +94,7 @@ function devbus.can(side, thing)
 end
 
 function devbus.discover()
+  os.queueEvent('devbus', 'discover')
 
   local ret = {}
   for k, v in pairs(_peripheral.getNames()) do
@@ -110,6 +119,8 @@ end
 local regist = {}
 
 function devbus.populate()
+  os.queueEvent('devbus', 'populate')
+
   if fs.exists('/dev') then
     fs.delete('/dev')
   end
@@ -156,6 +167,7 @@ function devbus.populate()
 end
 
 function devbus.isPresent(side)
+  os.queueEvent('devbus', 'ispresent', side)
   if devbus.update then
     devbus.update()
   end
