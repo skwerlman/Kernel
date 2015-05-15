@@ -127,11 +127,11 @@ function devbus.populate()
         ['node_name'] = nam,
         ['raw_type'] = peripheral.getType(k),
         ['pro_type'] = typ,
-        ['type_hum'] = (typ == 'chr' and 'Character Device')
-          or (typ == 'cmp' and 'Computer Device')
-          or (typ == 'blk' and 'Block Device')
-          or (typ == 'opp' and 'OpenPeripherals Device')
-          or 'Unrecognized Device'
+        ['type_hum'] = ((typ == 'chr' and 'Character Device: ')
+          or (typ == 'cmp' and 'Computer Device :')
+          or (typ == 'blk' and 'Block Device: ')
+          or (typ == 'opp' and 'OpenPeripherals Device: ')
+          or 'Unrecognized Device: ') .. peripheral.getType(k)
        }
     end dev_node.close()
     count = count + 1
