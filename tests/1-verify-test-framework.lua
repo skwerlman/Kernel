@@ -20,9 +20,6 @@ test.run = function(this)
     print("critical: error is not hijacked.")
     os.exit(1);
   end
-
-  -- error test
-  error("generic")
 end
 
 -- return the test object
