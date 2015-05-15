@@ -23,20 +23,31 @@ THE SOFTWARE.
 ]]
 
 local devbus = {assigned = {}}
+local _peripheral = (function(tab)
+  local ret = {}
+  for k, v in pairs(tab) do
+    ret[k] = v
+  end
+
+  return ret end)(getfenv(1).peripheral)
+
 
 function devbus.assign(name, fun)
   assert(type(name) == 'string', 'expected string, got ' .. type(name))
   assert(type(fun) == 'function', 'expected function, got ' .. type(fun))
   devbus.assigned[name] = fun
-  return true
+
+  if devbus.update then
+    devbus.update()
+  end
 end
 
 function devbus.wrap(side)
-  local name = peripheral.getType(side)
+  local name = _peripheral.getType(side)
   if devbus.assigned and devbus.assigned[name] then
     return devbus.assigned[name](side)
   else
-    return peripheral.wrap(side)
+    return _peripheral.wrap(side)
   end
 end
 
@@ -55,9 +66,14 @@ function devbus.getMethods(side)
   return ret
 end
 
+function devbus.getType(side)
+  return _peripheral.getType(side)
+end
+
 function devbus.hasDriver(side)
+
   return devbus.assigned ~= nil and
-    devbus.assigned[peripheral.getType(side)] ~= nil
+    devbus.assigned[_peripheral.getType(side)] ~= nil
 end
 
 function devbus.can(side, thing)
@@ -70,8 +86,9 @@ function devbus.can(side, thing)
 end
 
 function devbus.discover()
+
   local ret = {}
-  for k, v in pairs(peripheral.getNames()) do
+  for k, v in pairs(_peripheral.getNames()) do
     ret[v] = {
       ['side'] = v,
       ['handle'] = devbus.wrap(v),
@@ -96,17 +113,17 @@ function devbus.populate()
   if fs.exists('/dev') then
     fs.delete('/dev')
   end
-  local counts = {['chr'] = 0, ['cmp'] = 0, ['blk'] = 0, ['opp'] = 1}
+  local counts = {['chr'] = 0, ['cmp'] = 0, ['blk'] = 0, ['opp'] = 0, ['utp'] = 0}
 
   local devices = devbus.discover()
-  print('discovered ' .. table.size(devices) .. ' devices')
   local count = 0
+
   local function findDeviceType(side)
-    return (peripheral.getType(side) == 'modem' or peripheral.getType(side) == 'monitor' or peripheral.getType(side) == 'printer') and 'chr' or
-    (peripheral.getType(side) == 'turtle' or peripheral.getType(side) == 'computer') and 'cmp' or
-    (peripheral.getType(side) == 'drive') and 'blk' or
-    (peripheral.getType(side):sub(1, #"openperipheral") == "openperipheral") and 'opp' or
-    ('unknown_type_' .. peripheral.getType(side))
+    return (_peripheral.getType(side) == 'modem' or _peripheral.getType(side) == 'monitor' or _peripheral.getType(side) == 'printer') and 'chr' or
+    (_peripheral.getType(side) == 'turtle' or _peripheral.getType(side) == 'computer') and 'cmp' or
+    (_peripheral.getType(side) == 'drive') and 'blk' or
+    (_peripheral.getType(side):sub(1, #"openperipheral") == "openperipheral") and 'opp' or
+    ('utp')
   end
 
 
@@ -115,17 +132,22 @@ function devbus.populate()
     local nam = findDeviceType(k) .. tostring(counts[typ])
 
     local dev_node = fs.open('/dev/' .. nam, 'w') do
-      dev_node.write(('--@type=%s\n--@name=%s\n--@side=%s\n\n--<<EOF>>\n\n'):format(peripheral.getType(k), string.randomize('xxyy:xxyy-xxxx@xxyy'), k))
+      dev_node.write(('--@type=%s\n--@name=%s\n--@side=%s\n\n--<<EOF>>\n\n'):format(_peripheral.getType(k), string.randomize('xxyy:xxyy-xxxx@xxyy'), k))
       devices[k].meta = {
         ['node_name'] = nam,
-        ['raw_type'] = peripheral.getType(k),
+        ['raw_type'] = _peripheral.getType(k),
         ['pro_type'] = typ,
         ['type_hum'] = ((typ == 'chr' and 'Character Device: ')
           or (typ == 'cmp' and 'Computer Device :')
           or (typ == 'blk' and 'Block Device: ')
           or (typ == 'opp' and 'OpenPeripherals Device: ')
-          or 'Unrecognized Device: ') .. peripheral.getType(k)
+          or 'Unrecognized Device: ') .. _peripheral.getType(k)
        }
+      if _peripheral.getType(k) == 'modem' then
+        if not rednet.isOpen() then
+          rednet.open(k)
+        end
+      end
     end dev_node.close()
     counts[typ] = counts[typ] + 1
   end
@@ -133,11 +155,21 @@ function devbus.populate()
   return devices
 end
 
+function devbus.isPresent(side)
+  if devbus.update then
+    devbus.update()
+  end
+  return _peripheral.isPresent(side)
+end
+
 devbus.devices = devbus.populate()
 
 devbus.device = {}
 
 function devbus.device.byName(devn)
+  if devbus.update then
+    devbus.update()
+  end
   for k, v in pairs(devbus.devices) do
     if v.meta.node_name == devn then
       return v
@@ -150,20 +182,31 @@ local function first(tab)
 end
 
 function devbus.device.allByType(typ)
+  if devbus.update then
+    devbus.update()
+  end
+
   local ret = {}
   for k, v in pairs(devbus.devices) do
     if v.meta.pro_type == typ then
-      ret[k] = v
+        ret[k] = v
     end
   end
   return ret
 end
 
 function devbus.device.firstByType(typ)
+  if devbus.update then
+    devbus.update()
+  end
   return type(devbus.device.allByType(typ)) == 'table' and first(devbus.device.allByType(typ)).side or false
 end
 
 function devbus.device.allByRawType(typ)
+  if devbus.update then
+    devbus.update()
+  end
+
   local ret = {}
   for k, v in pairs(devbus.devices) do
     if v.meta.raw_type == typ then
@@ -174,11 +217,38 @@ function devbus.device.allByRawType(typ)
 end
 
 function devbus.device.firstByRawType(typ)
+  if devbus.update then
+    devbus.update()
+  end
+
   return type(devbus.device.allByRawType(typ)) == 'table' and first(devbus.device.allByRawType(typ)).side or false
 end
 
 function devbus.update()
   devbus.devices = devbus.populate()
 end
+
+function devbus.find(type, func)
+  if devbus.update then
+    devbus.update()
+  end
+
+  local ret = {}
+
+  if func then
+    for k, v in pairs(devbus.device.allByRawType(type)) do
+      if func(v, devbus.wrap(v.side)) then
+        table.insert(ret, v)
+      end
+    end
+    return ret
+  else
+    for k, v in pairs(devbus.device.allByRawType(type)) do
+      table.insert(ret, v)
+    end
+    return ret
+  end
+end
+
 
 return devbus

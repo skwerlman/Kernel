@@ -15,12 +15,12 @@ local i=0;
 
 -- check if cc or base
 if computer == nil then
-  print("platform is lua");
-  fs = require("lfs");
+  print("platform is lua")
+  fs = require("lfs")
   fs.list = fs.dir;
   unit="ms"
 else
-  print("platform is computercraft");
+  print("platform is computercraft")
   fs = _G["fs"];
   unit="s"
   cc=true;
@@ -47,9 +47,9 @@ test = {}
 test.print = print;
 test.failed = function()
   if manifest ~= nil then
-    print(manifest.onFail);
+    print(manifest.onFail)
   else
-    print("Test Failed.");
+    print("Test Failed.")
     test.status=1;
   end
 end
@@ -59,10 +59,10 @@ test.log = function(m)
 end
 
 -- sandbox it.
-local env = copy(_G);
+local env = copy(_G)
 env.error = function(x)
-    print("fail\n reason: '"..x.."'");
-    -- print(debug.traceback(x));
+    print("fail\n reason: '"..x.."'")
+    -- print(debug.traceback(x))
     test.status=1;
     tests.failed=tests.failed+1;
 end
@@ -74,13 +74,13 @@ for file in fs.list("tests") do
     i = i+1;
 
     -- load the file.
-    local o  = loadfile("tests/"..file);
+    local o  = loadfile("tests/"..file)
 
     -- check if it already failed (syntax wise).
     if o == nil then
-      test.failed(o);
+      test.failed(o)
     else
-      setfenv(o, env); -- set the enviroment
+      setfenv(o, env) -- set the enviroment
 
       local f = o()
       local m = f.manifest;
@@ -90,12 +90,12 @@ for file in fs.list("tests") do
       local e = pcall(f:run(), nil)
 
       if e ~= false then
-        env.error(e);
+        env.error(e)
       end
 
       -- must've succeded.
       if test.status ~= 1 then
-        print("success");
+        print("success")
         tests.succed = tests.succed+1;
       end
     end
@@ -103,17 +103,17 @@ for file in fs.list("tests") do
 end
 
 print("Tests completed.\n")
-print("Stats: ");
+print("Stats: ")
 print("F: "..tostring(tests.failed))
 print("S: "..tostring(tests.succed))
 print("T: "..os.clock()..unit.."\n")
 
 if tests.failed ~= 0 then
-  print("Some tests failed.");
+  print("Some tests failed.")
   print("return code 1.")
-  os.exit(1);
+  os.exit(1)
 else
-  print("All tests succeded.");
-  print("return code 0");
-  os.exit(0);
+  print("All tests succeded.")
+  print("return code 0")
+  os.exit(0)
 end
