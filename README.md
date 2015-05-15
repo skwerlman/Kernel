@@ -8,4 +8,4 @@ TARDIX
 An [object-oriented](https://en.wikipedia.org/wiki/Object-oriented_programming) [microkernel](https://en.wikipedia.org/wiki/Microkernel) for [computercraft](http://computercraft.info)
 
 
-Tardix has a kinda obscure API, with no source docs (*i promise i'll change*), so there are fancy markdown docs with examples [here](https://github.com/TARDIX/Kernel/blob/rewrite/doc/index.md)
+Tardix has a kinda obscure API, with no source docs (*I promise I'll change*), so there are fancy markdown docs with examples [here](https://github.com/TARDIX/Kernel/blob/rewrite/doc/index.md)
