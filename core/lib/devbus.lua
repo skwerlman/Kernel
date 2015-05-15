@@ -113,16 +113,26 @@ function devbus.populate()
     return (peripheral.getType(side) == 'modem' or peripheral.getType(side) == 'monitor' or peripheral.getType(side) == 'printer') and 'chr' or
     (peripheral.getType(side) == 'turtle' or peripheral.getType(side) == 'computer') and 'cmp' or
     (peripheral.getType(side) == 'drive') and 'blk' or
-    (peripheral.getType(side):sub(1, #"openperipheral") == "openperipheral") and 'openp' or
+    (peripheral.getType(side):sub(1, #"openperipheral") == "openperipheral") and 'opp' or
     ('unknown_type_' .. peripheral.getType(side))
   end
 
 
   for k, v in pairs(devices) do
     local nam = findDeviceType(k) .. tostring(count)
+    local typ = findDeviceType(k)
     local dev_node = fs.open('/dev/' .. nam, 'w') do
       dev_node.write(('--@type=%s\n--@name=%s\n--@side=%s'):format(peripheral.getType(k), string.randomize('xxyy:xxyy-xxxx@xxyy'), k))
-      devices[k].node_nam = nam
+      devices[k].meta = {
+        ['node_name'] = nam,
+        ['raw_type'] = peripheral.getType(k),
+        ['pro_type'] = typ,
+        ['type_hum'] = (typ == 'chr' and 'Character Device')
+          or (typ == 'cmp' and 'Computer Device')
+          or (typ == 'blk' and 'Block Device')
+          or (typ == 'opp' and 'OpenPeripherals Device')
+          or 'Unrecognized Device'
+       }
     end dev_node.close()
     count = count + 1
   end
