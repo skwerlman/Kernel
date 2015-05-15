@@ -68,6 +68,12 @@ function string.randomize(template)
 	end)
 end
 
+function table.size(tab)
+  local ret = 0
+  for k, v in pairs(tab) do ret = ret + 1 end
+  return ret
+end
+
 ----------------------------------------------------------------------------------------------------------
 _G.kRoot = pcmdline['kernel_root']
 
@@ -191,6 +197,7 @@ if fs.exists(fs.combine(kRoot, '/core/events')) then
     kthread.addFile(fs.combine(fs.combine(kRoot,'/core/events'), v))
   end
 end
+
 
 while true do
   if threading then

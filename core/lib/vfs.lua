@@ -52,7 +52,7 @@ function vfs.isReadable(number)
 end
 
 function vfs.write(handle, data)
-  if vfs.isWritable(handle)
+  if vfs.isWritable(handle) then
     vfs.getHandle(handle).write(data)
   end
 end
@@ -76,7 +76,7 @@ function vfs.bind(path, node)
 end
 
 
-local vfs.ccfs = {}
+vfs.ccfs = {}
 
 function vfs.populateCCFS()
   local function listAll(_path, _files)
@@ -104,10 +104,10 @@ function vfs.populateCCFS()
   end
 
   remaining = #trul
-  do
+  repeat
     vfs.bind(trul[remaining], fs.open)
     remaining = remaining - 1
-  while remaining ~= 1
+  until remaining == 0 end
 
   vfs.ccfs = trul
 end
