@@ -22,28 +22,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
 
-local devbus = {}
+local devbus = {assigned = {}}
 
 function devbus.assign(name, fun)
   assert(type(name) == 'string', 'expected string, got ' .. type(name))
-  assert(type(name) == 'table', 'expected table, got ' .. type(name))
-  if not devbus.assigned then
-    devbus.assigned = {
-      [name] = devn
-    }
-    return true
-  elseif devbus.assigned[name] then
-    return false, 'already exists'
-  elseif not devbus.assigned[name] then
-    devbus.assigned[name] = devn
-    return true
-  end
+  assert(type(fun) == 'function', 'expected function, got ' .. type(fun))
+  devbus.assigned[name] = fun
+  return true
 end
 
 function devbus.wrap(side)
   local name = peripheral.getType(side)
-  if devbus.assigned and devbus.assigned[side] then
-    return devbus.assigned[side]()
+  if devbus.assigned and devbus.assigned[name] then
+    return devbus.assigned[name](side)
   else
     return peripheral.wrap(side)
   end
@@ -66,7 +57,7 @@ end
 
 function devbus.hasDriver(side)
   return devbus.assigned ~= nil and
-    devbus.assigned[side] ~= nil
+    devbus.assigned[peripheral.getType(side)] ~= nil
 end
 
 function devbus.can(side, thing)
@@ -82,6 +73,7 @@ function devbus.discover()
   local ret = {}
   for k, v in pairs(peripheral.getNames()) do
     ret[v] = {
+      ['side'] = v,
       ['handle'] = devbus.wrap(v),
       ['methods'] = devbus.getMethods(v),
       ['hasDriver'] = devbus.hasDriver(v),
@@ -98,13 +90,13 @@ function devbus.discover()
   return ret
 end
 
-local counts = {['chr'] = 0, ['cmp'] = 0, ['blk'] = 0}
 local regist = {}
 
 function devbus.populate()
   if fs.exists('/dev') then
     fs.delete('/dev')
   end
+  local counts = {['chr'] = 0, ['cmp'] = 0, ['blk'] = 0, ['opp'] = 1}
 
   local devices = devbus.discover()
   print('discovered ' .. table.size(devices) .. ' devices')
@@ -119,10 +111,11 @@ function devbus.populate()
 
 
   for k, v in pairs(devices) do
-    local nam = findDeviceType(k) .. tostring(count)
     local typ = findDeviceType(k)
+    local nam = findDeviceType(k) .. tostring(counts[typ])
+
     local dev_node = fs.open('/dev/' .. nam, 'w') do
-      dev_node.write(('--@type=%s\n--@name=%s\n--@side=%s'):format(peripheral.getType(k), string.randomize('xxyy:xxyy-xxxx@xxyy'), k))
+      dev_node.write(('--@type=%s\n--@name=%s\n--@side=%s\n\n--<<EOF>>\n\n'):format(peripheral.getType(k), string.randomize('xxyy:xxyy-xxxx@xxyy'), k))
       devices[k].meta = {
         ['node_name'] = nam,
         ['raw_type'] = peripheral.getType(k),
@@ -134,7 +127,7 @@ function devbus.populate()
           or 'Unrecognized Device: ') .. peripheral.getType(k)
        }
     end dev_node.close()
-    count = count + 1
+    counts[typ] = counts[typ] + 1
   end
 
   return devices
@@ -142,5 +135,50 @@ end
 
 devbus.devices = devbus.populate()
 
+devbus.device = {}
+
+function devbus.device.byName(devn)
+  for k, v in pairs(devbus.devices) do
+    if v.meta.node_name == devn then
+      return v
+    end
+  end
+end
+
+local function first(tab)
+  for k, v in pairs(tab) do return v end
+end
+
+function devbus.device.allByType(typ)
+  local ret = {}
+  for k, v in pairs(devbus.devices) do
+    if v.meta.pro_type == typ then
+      ret[k] = v
+    end
+  end
+  return ret
+end
+
+function devbus.device.firstByType(typ)
+  return type(devbus.device.allByType(typ)) == 'table' and first(devbus.device.allByType(typ)).side or false
+end
+
+function devbus.device.allByRawType(typ)
+  local ret = {}
+  for k, v in pairs(devbus.devices) do
+    if v.meta.raw_type == typ then
+      ret[k] = v
+    end
+  end
+  return ret
+end
+
+function devbus.device.firstByRawType(typ)
+  return type(devbus.device.allByRawType(typ)) == 'table' and first(devbus.device.allByRawType(typ)).side or false
+end
+
+function devbus.update()
+  devbus.devices = devbus.populate()
+end
 
 return devbus
