@@ -7,10 +7,10 @@ TARDIX API documentation index. Here you'll find every article and interface you
 
 
 ####Section 1
-#####_Basic interfacting with the kernel and hardware_
+#####*Basic interfacting with the kernel and hardware*
 
 - [The Device Bus](https://github.com/TARDIX/Kernel/blob/rewrite/doc/api/devbus.md)
-_ The device bus is used to interface with peripherals._
+* The device bus is used to interface with peripherals.*
 
 
 ------
