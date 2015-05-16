@@ -19,6 +19,8 @@ System calls are the main way for a library to interact with the isolated areas 
 
 The way system calls work in TARDIX is very similar to the way they work in real-life operating systems. But, instead of firing an interrupt (for example, *0x80* on Linux), in TARDIX, you fire an event. Because there is no CPU-provided backing for system calls like there are interrupts in *x86* and *x86_64*, this requires a multi-threaded kernel.
 
+For this, we implemented a related concept, the kThread (_kernel thread_). The kThread is responsible for catching events and passing them on to any ready and waiting listeners.
+
 One way to call the system is the one employed by libtblob, firing an event with `os.queueEvent` or the to-be sandboxed `coroutine.fire`. Follows an example of calling the system.
 
 ```lua
