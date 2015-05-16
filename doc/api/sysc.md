@@ -1,4 +1,4 @@
-The Device Bus
+The System Call Interface
 --------------
 
 [*(Back to index)*](https://github.com/TARDIX/Kernel/blob/rewrite/doc/index.md)
