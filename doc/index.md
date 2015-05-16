@@ -9,8 +9,8 @@ TARDIX API documentation index. Here you'll find every article and interface you
 ####Section 1
 #####*Basic interfacting with the kernel and hardware*
 
-- [The Device Bus](https://github.com/TARDIX/Kernel/blob/rewrite/doc/api/devbus.md) *The device bus is used to interface with peripherals.*
-- [Concepts - System Calls](https://github.com/TARDIX/Kernel/blob/rewrite/doc/api/sysc.md) *System Calls are ways to call priviledged code*
+- [The Device Bus](https://github.com/TARDIX/Kernel/blob/rewrite/doc/concept/devbus.md) *The device bus is used to interface with peripherals.*
+- [Concepts - System Calls](https://github.com/TARDIX/Kernel/blob/rewrite/doc/concept/sysc.md) *System Calls are ways to call priviledged code*
 
 ------
 
