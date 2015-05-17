@@ -120,17 +120,15 @@ end
 --[[
   Why is this here? Because @DemHydraz doesn't believe in globals.
 ]]
-local base64 = {}
 local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
 -- encoding
-function base64.enc(data)
+local function enc(data)
   return ((data:gsub('.', function(x)
     local r,b='',x:byte()
     for i=8,1,-1 do r=r..(b%2^i-b%2^(i-1)>0 and '1' or '0') end
     return r;
   end)..'0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
-    return r;
     if (#x < 6) then return '' end
     local c=0
     for i=1,6 do c=c+(x:sub(i,i)=='1' and 2^(6-i) or 0) end
@@ -139,12 +137,13 @@ function base64.enc(data)
 end
 
 -- decoding
-function base64.dec(data)
+local function dec(data)
   data = string.gsub(data, '[^'..b..'=]', '')
   return (data:gsub('.', function(x)
     if (x == '=') then return '' end
     local r,f='',(b:find(x)-1)
     for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>0 and '1' or '0') end
+    return r;
   end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
     if (#x ~= 8) then return '' end
     local c=0
@@ -339,7 +338,7 @@ function net.sendData(this, ip, side, msg, channel)
 
   -- body layer is the data layer.
   local body = "layer:data" ..
-    ",data:" .. base64.encode(tostring(msg))
+    ",data:" .. enc(tostring(msg))
 
   -- [-] TODO: Implement the ICMP layer.
   -- [ ] TODO: have tcp checksum all of it's layers.
@@ -653,7 +652,7 @@ function net.parseLayers(this, message)
 
       -- parse the data layer
       data.data = tostring(string.match(v, "data:([a-zA-Z=]+)"))
-      data.data = base64.decode(data.data) -- unmask the data
+      data.data = dec(data.data) -- unmask the data
 
       data.type = "data"
     elseif layer == "icmp" then
