@@ -45,19 +45,19 @@ local function split(inputstr, sep)
 end
 
 local _cmdlin1 = split(kcmdline, ' ')
-local pcmdline = {}
+_G.kernelcmd = {}
 
 for k, v in pairs(_cmdlin1) do
   if #split(v, '=') == 2 then
     local i, j = unpack(split(v, '='))
     if #split(j, ',') >= 2 then
       local x = split(j, ',')
-      pcmdline[i] = x
+      kernelcmd[i] = x
     else
-      pcmdline[i] = j
+      kernelcmd[i] = j
     end
   else
-    pcmdline[v] = true
+    kernelcmd[v] = true
   end
 end
 
@@ -75,31 +75,45 @@ function table.size(tab)
 end
 
 ----------------------------------------------------------------------------------------------------------
-_G.kRoot = pcmdline['kernel_root']
+_G.kRoot = kernelcmd['kernel_root']
 
 if fs.exists(fs.combine(kRoot, '/core/lib')) then
-  for k,v in pairs(fs.list(fs.combine(kRoot, '/core/lib'))) do
-    local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/lib'), v))
+  for k, v in pairs(fs.list(fs.combine(kRoot, '/core/lib'))) do
+    if not fs.isDir(fs.combine(fs.combine(kRoot, '/core/lib'), v)) then
+      local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/lib'), v))
 
+      if not ok then
+        printError(err)
+      else
+        _G[({v:gsub('.lua', '')})[1]] = ok()
+      end
+    end
+  end
+end
+
+if fs.exists(fs.combine(kRoot, '/core/lib/init')) then
+  _G.init = {}
+  for k, v in pairs(fs.list(fs.combine(kRoot, '/core/lib/init'))) do
+    local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/lib/init'), v))
     if not ok then
       printError(err)
     else
-      _G[({v:gsub('.lua', '')})[1]] = ok()
+      _G.init[({v:gsub('.lua', '')})[1]] = ok()
     end
   end
 end
 
 if fs.exists(fs.combine(kRoot, '/core/mod')) then
-  if not pcmdline['nomods'] and module and fs.exists(fs.combine(kRoot, '/core/mod')) then
-    for k,v in pairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
+  if not kernelcmd['nomods'] and module and fs.exists(fs.combine(kRoot, '/core/mod')) then
+    for k, v  in pairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
       loadfile(fs.combine(fs.combine(kRoot, '/core/mod'), v))()
     end
     module.probeAll('load')
-  elseif pcmdline['nomods'] and pcmdline['loadmods'] and module and fs.exists(fs.combine(kRoot, '/core/mod')) then
-    for k,v in pairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
+  elseif kernelcmd['nomods'] and kernelcmd['loadmods'] and module and fs.exists(fs.combine(kRoot, '/core/mod')) then
+    for k, v in pairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
       loadfile(fs.combine(fs.combine(kRoot, '/core/mod'), v))()
     end
-    for k, v in pairs(pcmdline['loadmods']) do
+    for k, v in pairs(kernelcmd['loadmods']) do
       module.probe(v, 'load')
     end
   end
@@ -111,29 +125,59 @@ end
 
 
 if run.exec then
-  local inits = {
-    '/init',
-    '/sbin/init',
-    '/bin/init',
-    '/lib/init',
-    '/usr/init',
-    '/usr/sbin/init',
-    '/usr/bin/init',
-    '/usr/lib/init',
-    '/init.lua',
-    '/sbin/init.lua',
-    '/bin/init.lua',
-    '/lib/init.lua',
-    '/usr/init.lua',
-    '/usr/sbin/init.lua',
-    '/usr/bin/init.lua',
-    '/usr/lib/init.lua',
-  }
+  if kernelcmd['initrfs'] then
+    local initf = init.initrfs.loadinitrfs(kernelcmd['initrfs'])
+    local inits = {
+      '/init',
+      '/sbin/init',
+      '/bin/init',
+      '/lib/init',
+      '/usr/init',
+      '/usr/sbin/init',
+      '/usr/bin/init',
+      '/usr/lib/init',
+      '/init.lua',
+      '/sbin/init.lua',
+      '/bin/init.lua',
+      '/lib/init.lua',
+      '/usr/init.lua',
+      '/usr/sbin/init.lua',
+      '/usr/bin/init.lua',
+      '/usr/lib/init.lua',
+    }
 
-  for i = 1, #inits do
-    if fs.exists(inits[i]) then
-      run.spawn(inits[i])
-      break
+    for i = 1, #inits do
+      if initf.files and initf.files[inits[i]] then
+        run.spawn(init.initrfs.loadfileFrom(initf, inits[i]))
+        break
+      end
+    end
+  else
+    local inits = {
+      '/init',
+      '/sbin/init',
+      '/bin/init',
+      '/lib/init',
+      '/usr/init',
+      '/usr/sbin/init',
+      '/usr/bin/init',
+      '/usr/lib/init',
+      '/init.lua',
+      '/sbin/init.lua',
+      '/bin/init.lua',
+      '/lib/init.lua',
+      '/usr/init.lua',
+      '/usr/sbin/init.lua',
+      '/usr/bin/init.lua',
+      '/usr/lib/init.lua',
+    }
+
+
+    for i = 1, #inits do
+      if fs.exists(inits[i]) then
+        run.spawn(inits[i])
+        break
+      end
     end
   end
 else
