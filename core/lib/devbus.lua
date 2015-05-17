@@ -193,6 +193,11 @@ local function first(tab)
   for k, v in pairs(tab) do return v end
 end
 
+local function size(tab)
+  local ret = 0; for k, v in pairs(tab) do ret = ret + 1 end; return ret
+end
+
+
 function devbus.device.allByType(typ)
   if devbus.update then
     devbus.update()
@@ -265,7 +270,7 @@ end
 setmetatable(devbus, {
   ['__index'] = function(t, k)
     if not rawget(t, k) then
-      return devbus.devices[devbus.device.firstByRawType(k)]
+      return first(devbus.device.allByRawType(k))
     else
       return rawget(t, k)
     end
