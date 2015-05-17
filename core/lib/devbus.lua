@@ -262,5 +262,16 @@ function devbus.find(type, func)
   end
 end
 
+setmetatable(devbus, {
+  ['__index'] = function(t, k)
+    if not rawget(t, k) then
+      return devbus.devices[devbus.device.firstByRawType(k)]
+    else
+      return rawget(t, k)
+    end
+  end,
+  ['__newindex'] = function(t, k, v) return end
+})
+
 
 return devbus
