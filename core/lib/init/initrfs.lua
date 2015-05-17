@@ -57,6 +57,10 @@ local function dec(data)
 end
 
 function initrfs.loadinitrfs(fil)
+  if fs.exists(fil) then
+    return false, 'not exists'
+  end
+
   local file = fs.open(fil, 'r')
   local data = dec(file.readAll())
   file.close()

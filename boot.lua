@@ -78,36 +78,39 @@ end
 _G.kRoot = kernelcmd['kernel_root']
 
 if fs.exists(fs.combine(kRoot, '/core/lib')) then
-  for k,v in pairs(fs.list(fs.combine(kRoot, '/core/lib'))) do
-    local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/lib'), v))
+  for k, v in pairs(fs.list(fs.combine(kRoot, '/core/lib'))) do
+    if not fs.isDir(fs.combine(fs.combine(kRoot, '/core/lib'), v)) then
+      local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/lib'), v))
 
-    if not ok then
-      printError(err)
-    else
-      _G[({v:gsub('.lua', '')})[1]] = ok()
+      if not ok then
+        printError(err)
+      else
+        _G[({v:gsub('.lua', '')})[1]] = ok()
+      end
     end
   end
 end
 
 if fs.exists(fs.combine(kRoot, '/core/lib/init')) then
-  for k,v in pairs(fs.list(fs.combine(kRoot, '/core/lib/init'))) do
-    local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/lib'), v))
+  _G.init = {}
+  for k, v in pairs(fs.list(fs.combine(kRoot, '/core/lib/init'))) do
+    local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/lib/init'), v))
     if not ok then
       printError(err)
     else
-      _G['init_' .. ({v:gsub('.lua', '')})[1]] = ok()
+      _G.init[({v:gsub('.lua', '')})[1]] = ok()
     end
   end
 end
 
 if fs.exists(fs.combine(kRoot, '/core/mod')) then
   if not kernelcmd['nomods'] and module and fs.exists(fs.combine(kRoot, '/core/mod')) then
-    for k,v in pairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
+    for k, v  in pairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
       loadfile(fs.combine(fs.combine(kRoot, '/core/mod'), v))()
     end
     module.probeAll('load')
   elseif kernelcmd['nomods'] and kernelcmd['loadmods'] and module and fs.exists(fs.combine(kRoot, '/core/mod')) then
-    for k,v in pairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
+    for k, v in pairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
       loadfile(fs.combine(fs.combine(kRoot, '/core/mod'), v))()
     end
     for k, v in pairs(kernelcmd['loadmods']) do
@@ -123,7 +126,7 @@ end
 
 if run.exec then
   if kernelcmd['initrfs'] then
-    local initf = initrfs.loadinitrfs(kernelcmd['initrfs'])
+    local initf = init.initrfs.loadinitrfs(kernelcmd['initrfs'])
     local inits = {
       '/init',
       '/sbin/init',
@@ -145,7 +148,7 @@ if run.exec then
 
     for i = 1, #inits do
       if initf.files and initf.files[inits[i]] then
-        run.spawn(initrfs.loadFileFrom(initf, inits[i]))
+        run.spawn(init.initrfs.loadfileFrom(initf, inits[i]))
         break
       end
     end
