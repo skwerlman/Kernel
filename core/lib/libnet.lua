@@ -482,12 +482,14 @@ function net.d(this)
     local event, modemSide, senderChannel,
           replyChannel, message, senderDistance = os.pullEvent("modem_message")
 
+    print("got event: ")
     print(event)
     print(modemSide)
     print(senderChannel)
     print(replyChannel)
     print(senderDistance)
-    -- this:receive(modemSide, message)
+
+    this:receive(modemSide, message)
   end
 end
 
