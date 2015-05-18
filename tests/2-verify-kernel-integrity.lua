@@ -7,7 +7,7 @@ test.manifest = {
 }
 
 test.run = function(this)
-  t = loadfile("boot.lua");
+  local t = loadfile("boot.lua");
 
   if t == nil then
     error("boot.lua has a syntax error, t = nil [loadfile]")
