@@ -21,16 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
-local syscalls = {}
 
-for k,v in pairs(fs.list(fs.combine(kRoot, '/core/syscalls'))) do
-  local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/syscalls'), v))
-
-  if not ok then
-    printError(err)
-  else
-    syscalls[({v:gsub('.lua', '')})[1]] = ok
+function fail(ev, da)
+  if ev == 'failure' then
+    print(textutils.serialize(da))
   end
 end
-
-return syscalls

@@ -21,6 +21,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
+
+local syscalls = {}
+
+for k,v in pairs(fs.list(fs.combine(kRoot, '/core/syscalls'))) do
+  local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/syscalls'), v))
+
+  if not ok then
+    printError(err)
+  else
+    syscalls[({v:gsub('.lua', '')})[1]] = ok
+  end
+end
+
 function catch(event, name, ...)
   if event == 'syscall' then
     if _G['tardix_sys_'..name] then
@@ -30,7 +43,7 @@ function catch(event, name, ...)
     elseif syscalls[name] then
       syscalls[name](...)
     else
-      os.queueEvent('syscall_failure', 'unknown', name)
+      os.queueEvent('failure', {['emitter'] = 'syscall_kernel', msg = {'unknown', name}})
       printError('unknown ' .. name)
     end
   end
