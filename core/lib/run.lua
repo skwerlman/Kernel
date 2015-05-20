@@ -30,14 +30,22 @@ local function doFindFncs(fnc)
   setmetatable(env, {['__index'] = _G})
 
   setfenv(fnc, env)
-  pcall(fnc)
-  local ret = {}
-  for k, v in pairs(env) do
-    if type(v) == 'function' then
-      ret[k] = v
+  local ok, val = pcall(fnc)
+  if ok then
+    if not val then
+      local ret = {}
+      for k, v in pairs(env) do
+        if type(v) == 'function' then
+          ret[k] = v
+        end
+      end
+      return ret
+    else
+      return val
     end
+  else
+    error(err)
   end
-  return ret
 end
 
 function run.dailin.link(fof)
@@ -81,7 +89,7 @@ local function doLoad(fil)
 end
 
 function run.exec(file, ...)
-  doExec(file, run.dailin.link(file)['main'], ...)
+  return doExec(file, run.dailin.link(file)['main'], ...) or false
 end
 
 function run.spawn(fileOrFunc)
@@ -125,6 +133,16 @@ function run.spawnp(fof)
     return newp
   else
     return false
+  end
+end
+
+function run.require(file)
+  for k, v in pairs({'/usr/lib/', '/lib/', getfenv(2)._FILE and fs.getDir(getfenv(2)._FILE) or '/usr/lib'}) do
+    if fs.exists(fs.combine(v, file)) then
+      return run.dailin.link(fs.combine(v, file))
+    elseif fs.exists(fs.combine(v, file) .. '.lua') then
+      return run.dailin.link(fs.combine(v, file) .. '.lua')
+    end
   end
 end
 
