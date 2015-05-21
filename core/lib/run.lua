@@ -146,5 +146,7 @@ function run.require(file)
   end
 end
 
+--_G.require = run.require
+
 
 return run
