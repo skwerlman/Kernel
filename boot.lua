@@ -74,6 +74,13 @@ function table.size(tab)
   return ret
 end
 
+function table.from(tab, start)
+  local ret = {}
+  for i = start, #tab do
+    ret[#ret + 1] = tab[i]
+  end
+  return ret
+end
 ----------------------------------------------------------------------------------------------------------
 _G.kRoot = kernelcmd['kernel_root']
 

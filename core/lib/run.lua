@@ -38,9 +38,7 @@ local function doFindFncs(fnc)
     if not val then
       local ret = {}
       for k, v in pairs(env) do
-        if type(v) == 'function' then
-          ret[k] = v
-        end
+        ret[k] = v
       end
       return ret
     else
@@ -57,11 +55,11 @@ function run.dailin.link(fof)
 end
 
 
-local function doExec(src, fn, ...)
+local function doExec(envars, src, fn, ...)
   local env = {}
   local renv = setmetatable( {}, {
     __index = function( _, k )
-      return env[k] and env[k] or getfenv(2)[k]
+      return env[k] and env[k] or envars[k] and envars[k] or getfenv(2)[k]
     end,
     __newindex = function( _, k, v )
       env[k] = v
@@ -93,7 +91,15 @@ local function doLoad(fil)
 end
 
 function run.exec(file, ...)
-  return doExec(file, run.dailin.link(file)['main'], ...) or false
+  if fs.exists(file) then
+    return doExec({}, file, run.dailin.link(file)['main'], ...) or false
+  end
+end
+
+function run.exece(env, file, ...)
+  if fs.exists(file) then
+    return doExec(env, file, run.dailin.link(file)['main'], ...) or false
+  end
 end
 
 function run.spawn(fileOrFunc)
@@ -146,7 +152,16 @@ function run.require(file)
       return run.dailin.link(fs.combine(v, file))
     elseif fs.exists(fs.combine(v, file) .. '.lua') then
       return run.dailin.link(fs.combine(v, file) .. '.lua')
+    elseif fs.exists(fs.combine(v, 'lib' .. file)) then
+      return run.dailin.link(fs.combine(v, 'lib' .. file))
+    elseif fs.exists(fs.combine(v, 'lib' .. file .. '.lua')) then
+      return run.dailin.link(fs.combine(v, 'lib' .. file .. '.lua'))
     end
+  end
+  if fs.exists(fs.combine('/', file)) then
+    return run.dailin.link(fs.combine('/', file))
+  elseif fs.exists(fs.combine('/', file) .. '.lua') then
+    return run.dailin.link(fs.combine('/', file) .. '.lua')
   end
 end
 
