@@ -144,6 +144,7 @@ function devbus.populate()
 
     local dev_node = fs.open('/dev/' .. nam, 'w') do
       dev_node.write(('--@type=%s\n--@name=%s\n--@side=%s\n\n--<<EOF>>\n\n'):format(_peripheral.getType(k), string.randomize('xxyy:xxyy-xxxx@xxyy'), k))
+      dev_node.write('return devbus.device.byName(\''.. nam ..'\')')
       devices[k].meta = {
         ['node_name'] = nam,
         ['raw_type'] = _peripheral.getType(k),
@@ -242,7 +243,9 @@ function devbus.device.firstByRawType(typ)
 end
 
 function devbus.update()
-  devbus.devices = devbus.populate()
+  if size(devbus.devices) ~= size(peripheral.getNames()) then
+    devbus.devices = devbus.populate()
+  end
 end
 
 function devbus.find(type, func)
