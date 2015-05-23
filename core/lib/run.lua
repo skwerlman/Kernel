@@ -82,7 +82,7 @@ local function doExec(envars, src, fn, ...)
   local ret, err = pcall(fn, ...)
 
   if not ret then
-    print(err)
+    printError('in file ' .. src .. ': ' .. err)
   end
 end
 
@@ -92,13 +92,30 @@ end
 
 function run.exec(file, ...)
   if fs.exists(file) then
-    return doExec({}, file, run.dailin.link(file)['main'], ...) or false
+    local mFn = run.dailin.link(file)
+    if not mFn['main'] then
+      printError('in file ' .. file .. ': failed to execute. no public main function. Existing functions are:')
+      for k, v in pairs(mFn) do
+        printError(k)
+      end
+    end
+
+    return doExec({}, file, mFn['main'], ...) or false
   end
 end
 
 function run.exece(env, file, ...)
   if fs.exists(file) then
-    return doExec(env, file, run.dailin.link(file)['main'], ...) or false
+    local mFn = run.dailin.link(file)
+    if not mFn['main'] then
+      printError('in file ' .. file .. ': failed to execute. no public main function. Existing functions are:')
+
+      for k, v in pairs(mFn) do
+        printError(k)
+      end
+    end
+
+    return doExec(env, file, mFn['main'], ...) or false
   end
 end
 
