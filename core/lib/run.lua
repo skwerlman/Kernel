@@ -44,7 +44,7 @@ local function doFindFncs(fnc)
       return val
     end
   else
-    error(err)
+    error(val)
   end
 end
 
@@ -67,9 +67,10 @@ local function doExec(src, fn, ...)
 
   if threading then
     if getfenv(2).threading.this then
+      env.threading = getfenv(2).threading
       env.threading.this = getfenv(2).threading.this:spawnSubprocess(src)
     elseif threading.scheduler then
-      env.threading = threading
+      env.threading = getfenv(2).threading
       env.threading.this = threading.scheduler:spawnSubprocess(src)
     end
   end
@@ -80,7 +81,7 @@ local function doExec(src, fn, ...)
   local ret, err = pcall(fn, ...)
 
   if not ret then
-    error(err, 2)
+    print(err)
   end
 end
 

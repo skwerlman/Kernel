@@ -99,6 +99,7 @@ function ret.thread:update( event, ... )
 
   local ok, data = coroutine.resume( self.co, event, ... )
   if not ok then
+    print(data)
     self.state = 'stopped'
     return false, data
   end
