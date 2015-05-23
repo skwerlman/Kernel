@@ -77,11 +77,24 @@ end
 ----------------------------------------------------------------------------------------------------------
 _G.kRoot = kernelcmd['kernel_root']
 
+
+local ok, err = loadfile(fs.combine(kRoot, '/core/kmessage.lua'))
+if not ok then
+  printError(err)
+  while true do
+    coroutine.yield()
+  end
+end
+
+_G.kmsg = ok()
+
+kmsg.post('core', 'tardix kernel attempting initialization now')
+
 if fs.exists(fs.combine(kRoot, '/core/lib')) then
   for k, v in pairs(fs.list(fs.combine(kRoot, '/core/lib'))) do
     if not fs.isDir(fs.combine(fs.combine(kRoot, '/core/lib'), v)) then
       local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/lib'), v))
-
+      kmsg.post('core', 'loaded library %s.', v)
       if not ok then
         printError(err)
       else
@@ -98,6 +111,7 @@ if fs.exists(fs.combine(kRoot, '/core/lib/init')) then
     if not ok then
       printError(err)
     else
+      kmsg.post('core', 'loaded initialization library %s', v)
       _G.init[({v:gsub('.lua', '')})[1]] = ok()
     end
   end
@@ -123,7 +137,7 @@ function kreq(path)
   return loadfile(fs.combine(kRoot, path))()
 end
 
-
+kmsg.post('init', 'searching for init')
 if run.exec then
   if kernelcmd['initrfs'] then
     local initf = init.initrfs.loadinitrfs(kernelcmd['initrfs'])
@@ -148,6 +162,7 @@ if run.exec then
 
     for i = 1, #inits do
       if initf.files and initf.files[inits[i]] then
+        kmsg.post('init', 'found init %s in a initrfs %s', kernelcmd['initrfs'], inits[i])
         run.spawn(init.initrfs.loadfileFrom(initf, inits[i]))
         break
       end
@@ -175,6 +190,7 @@ if run.exec then
 
     for i = 1, #inits do
       if fs.exists(inits[i]) then
+        kmsg.post('init', 'found init %s in root', inits[i])
         run.spawn(inits[i])
         break
       end
@@ -203,6 +219,7 @@ else
 
   for i = 1, #inits do
     if fs.exists(inits[i]) then
+      kmsg.post('init', 'found init %s, initialized sequencially', inits[i])
       dofile(inits[i])
       break
     end
@@ -233,15 +250,17 @@ function kthread.addFile(file)
   end
   kthread.addFunctions(run.dailin.link(ok))
 end
-
+kmsg.post('kthread', 'starting kernel thread')
 run.exec(fs.combine(kRoot, '/core/kthread.lua'))
 
 if fs.exists(fs.combine(kRoot, '/core/events')) then
   for k, v in pairs(fs.list(fs.combine(kRoot, '/core/events'))) do
+    kmsg.post('kthread', 'added event handler %s', v)
     kthread.addFile(fs.combine(fs.combine(kRoot,'/core/events'), v))
   end
 end
 
+kmsg.post('core', 'completed initialization; starting main loop.')
 
 while true do
   if threading then

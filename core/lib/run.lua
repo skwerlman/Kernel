@@ -31,6 +31,9 @@ local function doFindFncs(fnc)
 
   setfenv(fnc, env)
   local ok, val = pcall(fnc)
+  if not ok then
+    print(val)
+  end
   if ok then
     if not val then
       local ret = {}
@@ -97,9 +100,9 @@ function run.spawn(fileOrFunc)
   if threading then -- spawn a thread
     if type(fileOrFunc) == 'string' then
       if getfenv(2).threading and getfenv(2).threading.this then
-        return getfenv(2).threading.this:spawnThread(run.dailin.link(fileOrFunc)['main'] or error('failed ' .. fileOrFunc), fileOrFunc)
+        return getfenv(2).threading.this:spawnThread(run.dailin.link(fileOrFunc)['main'] or error('failed to start ' .. fileOrFunc .. ' because there is no public main function.'), fileOrFunc)
       else
-        return threading.scheduler:spawnThread(run.dailin.link(fileOrFunc)['main'] or error('failed ' .. fileOrFunc), fileOrFunc)
+        return threading.scheduler:spawnThread(run.dailin.link(fileOrFunc)['main'] or error('failed to start ' .. fileOrFunc .. ' because there is no public main function.'), fileOrFunc)
       end
     elseif type(fileOrFunc) == 'function' then
       if getfenv(2).threading and getfenv(2).threading.this then
