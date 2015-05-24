@@ -33,9 +33,7 @@ term.clear()
 local kcmdline = table.concat({...}, ' ')
 
 local function split(inputstr, sep)
-  if sep == nil then
-    sep = "%s"
-  end
+  sep = sep or "%s"
   local t={} ; i=1
   for str in string.gmatch(inputstr, '([^'..sep..']+)') do
     t[i] = str
