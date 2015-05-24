@@ -89,7 +89,7 @@ local function doExec(envars, src, fn, ...)
   setfenv(fn, renv)
   local ret, err = pcall(fn, ...)
   if not ret then
-    printError(('in file %s: %s'):format(src, err))
+    printError(('in file %s: %s'):format(src, err or 'empty error.'))
   end
 end
 
