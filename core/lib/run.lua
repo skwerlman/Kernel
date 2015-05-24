@@ -25,14 +25,22 @@ THE SOFTWARE.
 local run = {}
 
 run.dailin = {}
-local function doFindFncs(fnc)
+local function doFindFncs(fnc, envars)
   local env = {}
-  setmetatable(env, {['__index'] = _G})
+  local oenv = envars
+
+  setmetatable(env, {['__index'] = function( _, k )
+    if oenv and oenv[k] then
+      return oenv[k]
+    else
+      return getfenv(2)[k]
+    end
+  end})
 
   setfenv(fnc, env)
   local ok, val = pcall(fnc)
   if not ok then
-    print(val)
+    error(val, 4)
   end
   if ok then
     if not val then
@@ -49,9 +57,9 @@ local function doFindFncs(fnc)
   end
 end
 
-function run.dailin.link(fof)
+function run.dailin.link(fof, env)
   return doFindFncs((type(fof) == 'string' and
-    loadfile(fof) or (type(fof) == 'function' and fof or function() end)))
+    loadfile(fof) or (type(fof) == 'function' and fof or function() end)), env)
 end
 
 
@@ -80,9 +88,8 @@ local function doExec(envars, src, fn, ...)
 
   setfenv(fn, renv)
   local ret, err = pcall(fn, ...)
-
   if not ret then
-    printError('in file ' .. src .. ': ' .. err)
+    printError(('in file %s: %s'):format(src, err))
   end
 end
 
@@ -106,7 +113,7 @@ end
 
 function run.exece(env, file, ...)
   if fs.exists(file) then
-    local mFn = run.dailin.link(file)
+    local mFn = run.dailin.link(file, env)
     if not mFn['main'] then
       printError('in file ' .. file .. ': failed to execute. no public main function. Existing functions are:')
 

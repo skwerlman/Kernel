@@ -134,13 +134,19 @@ fifo_mt.__len = fifo.length
 local stack = fifo.new()
 local msg = {}
 
+local backup = {}
+
 function msg.post(sender, text, ...)
   stack:push({
     ['time'] = os.clock(),
     ['sender'] = sender,
     ['text'] = (...) and text:format(...) or text,
   })
-
+	table.insert(backup, 1, {
+		['time'] = os.clock(),
+		['sender'] = sender,
+		['text'] = (...) and text:format(...) or text
+	})
   os.queueEvent('kernel_message', ('[%s] [%s]: %s'):format(tostring(os.clock()), sender, text))
 end
 
@@ -173,5 +179,5 @@ function msg.clear()
 end
 
 msg.queue = stack
-
+msg.backup = backup
 return msg
