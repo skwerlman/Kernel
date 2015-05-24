@@ -273,7 +273,7 @@ while true do
   if threading then
     local data = {coroutine.yield()}
     if data[1] == 'terminate' then
-      error()
+      os.reboot()
     end
     threading.scheduler:update(unpack(data))
   end
