@@ -30,7 +30,6 @@ run it.
 term.setCursorPos(1,1)
 term.clear()
 
-local kcmdline = table.concat({...}, ' ')
 
 local function split(inputstr, sep)
   if sep == nil then
@@ -44,7 +43,7 @@ local function split(inputstr, sep)
   return t
 end
 
-local _cmdlin1 = split(kcmdline, ' ')
+local _cmdlin1 = {...}
 _G.kernelcmd = {}
 
 for k, v in pairs(_cmdlin1) do
