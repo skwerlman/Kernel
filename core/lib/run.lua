@@ -58,8 +58,18 @@ local function doFindFncs(fnc, envars)
 end
 
 function run.dailin.link(fof, env)
-  return doFindFncs((type(fof) == 'string' and
-    loadfile(fof) or (type(fof) == 'function' and fof or function() end)), env)
+  if type(fof) == 'string' then
+    local ok, err = loadfile(fof)
+    if not ok then
+      printError(err)
+      return
+    end
+    return doFindFncs(ok, evn)
+  elseif type(fof) == 'function' then
+    return doFindFncs(fof, env)
+  else
+    return
+  end
 end
 
 
@@ -87,10 +97,13 @@ local function doExec(envars, src, fn, ...)
   env._FILE = src
 
   setfenv(fn, renv)
-  local ret, err = pcall(fn, ...)
-  if not ret then
-    printError(('in file %s: %s'):format(src, err or 'empty error.'))
+  local data, val = pcall(fn, ...)
+
+  if not data then
+    printError(val)
   end
+
+  return val
 end
 
 local function doLoad(fil)
@@ -102,27 +115,20 @@ function run.exec(file, ...)
     local mFn = run.dailin.link(file)
     if not mFn['main'] then
       printError('in file ' .. file .. ': failed to execute. no public main function. Existing functions are:')
-      for k, v in pairs(mFn) do
-        printError(k)
-      end
+    else
+      return doExec({}, file, mFn['main'], ...) or false
     end
-
-    return doExec({}, file, mFn['main'], ...) or false
   end
 end
 
 function run.exece(env, file, ...)
   if fs.exists(file) then
     local mFn = run.dailin.link(file, env)
-    if not mFn['main'] then
+    if not mFn or not mFn['main'] then
       printError('in file ' .. file .. ': failed to execute. no public main function. Existing functions are:')
-
-      for k, v in pairs(mFn) do
-        printError(k)
-      end
+    else
+      return doExec(env, file, mFn['main'], ...) or false
     end
-
-    return doExec(env, file, mFn['main'], ...) or false
   end
 end
 
