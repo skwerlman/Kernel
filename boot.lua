@@ -78,6 +78,29 @@ function table.from(tab, start)
   end
   return ret
 end
+
+function table.filter(tab, fun)
+  local ret = {}
+
+  for k, v in pairs(tab) do
+    if fun(k, v) == true then
+      ret[k] = v
+    end
+  end
+
+  return ret
+end
+
+function table.foreach(tab, fun)
+  local ret = {}
+
+  for k, v in pairs(tab) do
+    ret[k] = fun(k, v)
+  end
+
+  return ret
+end
+
 ----------------------------------------------------------------------------------------------------------
 _G.kRoot = kernelcmd['kernel_root']
 
