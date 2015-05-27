@@ -137,45 +137,45 @@ local msg = {}
 local backup = {}
 
 function msg.post(sender, text, ...)
-  stack:push({
-    ['time'] = os.clock(),
-    ['sender'] = sender,
-    ['text'] = (...) and text:format(...) or text,
-  })
+	stack:push({
+		['time'] = os.clock(),
+		['sender'] = sender,
+		['text'] = (...) and text:format(...) or text,
+	})
 	table.insert(backup, 1, {
 		['time'] = os.clock(),
 		['sender'] = sender,
 		['text'] = (...) and text:format(...) or text
 	})
-  os.queueEvent('kernel_message', ('[%s] [%s]: %s'):format(tostring(os.clock()), sender, text))
+	os.queueEvent('kernel_message', ('[%s] [%s]: %s'):format(tostring(os.clock()), sender, text))
 end
 
 function msg.getLast()
-  local e = stack:pop()
-  if e then
-    return ('[%s] [%s]: %s'):format(tostring(e.time), e.sender, e.text)
-  else
-    return 'reached end of kmsg'
-  end
+	local e = stack:pop()
+	if e then
+		return ('[%s] [%s]: %s'):format(tostring(e.time), e.sender, e.text)
+	else
+		return 'reached end of kmsg'
+	end
 end
 
 function msg.getAll(s)
-  local ret = {}
-  local oret = {}
-  for i = 1, #stack._et do
-    table.insert(ret, ('[%s] [%s]: %s'):format(textutils.formatTime(stack._et[i].time, true), stack._et[i].sender, stack._et[i].text))
-    table.insert(oret, stack._et[i])
-  end
+	local ret = {}
+	local oret = {}
+	for i = 1, #stack._et do
+		table.insert(ret, ('[%s] [%s]: %s'):format(textutils.formatTime(stack._et[i].time, true), stack._et[i].sender, stack._et[i].text))
+		table.insert(oret, stack._et[i])
+	end
 
-  if s then
-    return ret -- return strings
-  else
-    return oret
-  end
+	if s then
+		return ret -- return strings
+	else
+		return oret
+	end
 end
 
 function msg.clear()
-  stack:pop(#stack._et)
+	stack:pop(#stack._et)
 end
 
 msg.queue = stack
