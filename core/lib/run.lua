@@ -127,7 +127,14 @@ function run.exece(env, file, ...)
     if not mFn or not mFn['main'] then
       printError('in file ' .. file .. ': failed to execute. no public main function. Existing functions are:')
     else
-      return doExec(table.join(env, mFn), file, mFn['main'], ...) or false
+      local p = setmetatable({}, {
+        ['__index'] = function(_, k)
+          return (rawget(mFn, k) or
+          rawget(env, k))
+        end
+      })
+
+      return doExec(p, file, mFn['main'], ...) or false
     end
   end
 end
