@@ -103,11 +103,13 @@ end
 
 function table.join(...)
   local ret = {}
-  for k, v in pairs({...}) do
+  for k, v in ipairs({...}) do
     if type(v) == 'table' then
-      for e, j in pairs(v) do
-        ret[k] = v
+      for e, j in ipairs(v) do
+        table.insert(ret, j)
       end
+    else
+      table.insert(ret, v)
     end
   end
 
