@@ -101,6 +101,20 @@ function table.foreach(tab, fun)
   return ret
 end
 
+function table.join(...)
+  local ret = {}
+  for k, v in pairs({...}) do
+    if type(v) == 'table' then
+      for e, j in pairs(v) do
+        ret[k] = v
+      end
+    end
+  end
+
+  return ret
+end
+
+
 ----------------------------------------------------------------------------------------------------------
 _G.kRoot = kernelcmd['kernel_root']
 

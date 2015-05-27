@@ -116,7 +116,7 @@ function run.exec(file, ...)
     if not mFn['main'] then
       printError('in file ' .. file .. ': failed to execute. no public main function. Existing functions are:')
     else
-      return doExec({}, file, mFn['main'], ...) or false
+      return doExec(mFn, file, mFn['main'], ...) or false
     end
   end
 end
@@ -127,7 +127,7 @@ function run.exece(env, file, ...)
     if not mFn or not mFn['main'] then
       printError('in file ' .. file .. ': failed to execute. no public main function. Existing functions are:')
     else
-      return doExec(env, file, mFn['main'], ...) or false
+      return doExec(table.join(env, mFn), file, mFn['main'], ...) or false
     end
   end
 end
