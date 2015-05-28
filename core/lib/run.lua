@@ -32,6 +32,8 @@ local function doFindFncs(fnc, envars)
   setmetatable(env, {['__index'] = function( _, k )
     if oenv and oenv[k] then
       return oenv[k]
+    elseif envars and envars[k] then
+      return envars[k]
     else
       return getfenv(2)[k]
     end
@@ -64,7 +66,7 @@ function run.dailin.link(fof, env)
       printError(err)
       return
     end
-    return doFindFncs(ok, evn)
+    return doFindFncs(ok, env)
   elseif type(fof) == 'function' then
     return doFindFncs(fof, env)
   else
