@@ -156,7 +156,7 @@ function devbus.populate()
           or 'Unrecognized Device: ') .. _peripheral.getType(k)
        }
       if _peripheral.getType(k) == 'modem' then
-        if not rednet.isOpen() then
+        if rednet and not rednet.isOpen() then
           rednet.open(k)
         end
       end
