@@ -69,6 +69,11 @@ function httpfs.open(path, m)
     return ret
   end
 
+  function handle.lines()
+    line = #splat
+    return splat
+  end
+
   function handle.close()
     handle._data = nil
   end
