@@ -36,7 +36,9 @@ local httpfs = {}
 function httpfs.open(path, m)
   local mode = (m == 'r' and 'r' or 'r')
   local handle = {
-    _data = http.get('http://'..path).readAll()
+    _data = http.get('http://' .. path, {
+
+    }).readAll()
   }
 
   setmetatable(handle, {
@@ -58,6 +60,10 @@ function httpfs.open(path, m)
   local line = 1
   local splat = string.split(handle._data, '\n')
   function handle.read()
+    if line >= #splat then
+      error('reached end of httpfs input buffer',2)
+      return
+    end
     local ret = splat[line]
     line = line + 1
     return ret
