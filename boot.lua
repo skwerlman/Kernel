@@ -41,7 +41,7 @@ local function split(inputstr, sep)
   return t
 end
 
-local _cmdlin1 = {...}
+local _cmdlin1 = split(table.concat({...}, ' '), '\n')
 _G.kernelcmd = {}
 
 for k, v in pairs(_cmdlin1) do
