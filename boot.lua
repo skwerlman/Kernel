@@ -142,7 +142,15 @@ if fs.exists(fs.combine(kRoot, '/core/lib')) then
       if not ok then
         printError(err)
       else
-        _G[({v:gsub('.lua', '')})[1]] = ok()
+        local ok, val = pcall(ok)
+        if ok then
+          _G[({string.gsub(v, '.lua', '')})[1]] = val
+        else
+          printError('failed to load library ' .. v .. ': ' .. val)
+          while true do
+            print('\b')
+          end
+        end
       end
     end
   end

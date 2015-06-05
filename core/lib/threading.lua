@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
+fs.delete('/sys/proc')
 local ret = {
   thread = {},
   process = {},
@@ -120,12 +121,13 @@ end
 local process = {}
 
 function ret.process:new( name )
-  local rID = string.randomize and string.randomize("xxyy:xxyy-xxxx@xxyy") or math.random()
+  local rID = string.randomize and string.randomize("xxyy") or math.random()
   local p = {}
 
   p.tid = rID
   p.name = name or rID
   p.children = {}
+  p.stdstreams_dir = fs.combine(fs.combine('/sys/proc/', rID), 'streams')
 
   setmetatable( p, {
     __index = self;
@@ -158,7 +160,6 @@ function ret.process:spawnSubprocess( name )
 end
 
 function ret.process:update( event, ... )
-  --os.queueEvent('process_update', self.tid, {event, ...})
   for i = #self.children, 1, -1 do
     local ok, data = self.children[i]:update( event, ... )
     if not ok then
@@ -170,9 +171,17 @@ function ret.process:update( event, ... )
     end
     if data == 'die' or self.children[i].state == 'stopped' then
       self.children[i].state = 'dead'
+      if self.onDie then
+        self:onDie()
+      end
       table.remove( self.children, i )
     end
   end
+
+  if self.onUpdate then
+    self:onUpdate()
+  end
+  
   return true, #self.children == 0 and 'die'
 end
 

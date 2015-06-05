@@ -121,8 +121,8 @@ local regist = {}
 function devbus.populate()
   os.queueEvent('devbus', 'populate')
 
-  if fs.exists('/dev') then
-    fs.delete('/dev')
+  if fs.exists('/sys/dev') then
+    fs.delete('/sys/dev')
   end
   local counts = {['chr'] = 0, ['cmp'] = 0, ['blk'] = 0, ['opp'] = 0, ['utp'] = 0}
 
@@ -142,7 +142,7 @@ function devbus.populate()
     local typ = findDeviceType(k)
     local nam = findDeviceType(k) .. tostring(counts[typ])
 
-    local dev_node = fs.open('/dev/' .. nam, 'w') do
+    local dev_node = fs.open('/sys/dev/' .. nam, 'w') do
       dev_node.write(('--@type=%s\n--@name=%s\n--@side=%s\n\n--<<EOF>>\n\n'):format(_peripheral.getType(k), string.randomize('xxyy:xxyy-xxxx@xxyy'), k))
       dev_node.write('return devbus.device.byName(\''.. nam ..'\')')
       devices[k].meta = {
