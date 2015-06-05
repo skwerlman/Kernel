@@ -22,6 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
 
+-- basic standard input, output and error-put driver.
+
+
 local oldio = (function(tab)
   local ret = {}
   for k, v in pairs(tab) do
