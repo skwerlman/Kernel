@@ -26,12 +26,7 @@ THE SOFTWARE.
 
 
 local oldio = (function(tab)
-  local ret = {}
-  for k, v in pairs(tab) do
-    ret[k] = v
-  end
-
-  return ret
+  local a={}for b,c in pairs(tab)do a[b]=c end;return a
 end)(getfenv(2).io)
 
 local newio = {}
