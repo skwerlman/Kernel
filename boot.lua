@@ -317,9 +317,6 @@ kmsg.post('core', 'completed initialization; starting main loop.')
 while true do
   if threading then
     local data = {coroutine.yield()}
-    if data[1] == 'terminate' then
-      os.reboot()
-    end
     threading.scheduler:update(unpack(data))
   end
 end
