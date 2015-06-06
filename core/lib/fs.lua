@@ -39,15 +39,24 @@ function _unique.unregister(n, t)
 end
 
 function _unique.list(p)
+  local ret = {}
   for k, v in pairs(_unique._registers) do
     if v.isOwnerOf and v.list then
       if v:isOwnerOf(p) then
-        return v:list(p)
+        for i, j in pairs(v:list(p)) do
+          table.insert(ret, j)
+        end
       end
     end
   end
 
-  return oldfs.list(p) -- fallback to ccfs
+  if oldfs.exists(p) then
+    for i, j in pairs(oldfs.list(p)) do
+      table.insert(ret, j)
+    end
+  end
+
+  return ret
 end
 
 function _unique.exists(p)

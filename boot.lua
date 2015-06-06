@@ -148,7 +148,7 @@ if fs.exists(fs.combine(kRoot, '/core/lib')) then
         else
           printError('failed to load library ' .. v .. ': ' .. val)
           while true do
-            print('\b')
+            sleep(0)
           end
         end
       end
@@ -170,7 +170,7 @@ if fs.exists(fs.combine(kRoot, '/core/filesys')) then
         else
           printError('failed to load library ' .. v .. ': ' .. val)
           while true do
-            print('\b')
+            sleep(0)
           end
         end
       end
