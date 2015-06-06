@@ -25,7 +25,7 @@ THE SOFTWARE.
 local oldfs = (function(tab)
   local a={}for b,c in pairs(tab)do a[b]=c end;return a
 end)(getfenv(2).fs)
-
+oldfs.id = 'oldfilesystem'
 _unique = {}
 
 _unique._registers = {}
@@ -37,194 +37,222 @@ end
 function _unique.unregister(n, t)
   rawget(_unique, '_registers')[n] = t
 end
+function _unique.register(n, t)
+  _unique._registers[n] = t
+end
 
-function _unique.list(p)
-  for k, v in pairs(_unique._registers) do
-    if v.isOwnerOf and v.list then
-      if v:isOwnerOf(p) then
-        return v:list(p)
+function _unique.unregister(n, t)
+  _unique._registers[n] = t
+end
+
+function _unique.getOwnerFor(path)
+  if path then
+    for k, v in pairs(_unique._registers) do
+      if v.isOwnerOf and v:isOwnerOf(path) then
+        return v
       end
+    end
+
+    if oldfs.exists(path) then
+      return oldfs
+    end
+  end
+end
+
+function _unique.callFunctionInOwnerFor(path, fn, ...)
+  local owner = _unique.getOwnerFor(path)
+  if owner and owner[fn] then
+    if owner == oldfs then
+      return owner[fn](path, ...)
+    else
+      return owner[fn](owner, path, ...)
+    end
+  elseif not owner and oldfs[fn] then
+    return oldfs[fn](path, ...)
+  end
+end
+
+local virtuals = {}
+
+function _unique.isVirtual(p)
+  if not p then
+    return false
+  else
+    if p:sub(1,1) == '/' then
+      return virtuals[p] ~= nil
+    else
+      return virtuals['/' .. p] ~= nil
+    end
+  end
+end
+
+function _unique.getVirtual(p)
+  if p:sub(1,1) == '/' then
+    return virtuals[p]
+  elseif virtuals[p] then
+    return virtuals[p]
+  else
+    return virtuals['/' .. p]
+  end
+end
+
+function _unique.addVirtual(p, n)
+  if not virtuals[p] then
+    virtuals[p] = n
+  end
+end
+
+function _unique.callVirtual(p, f, ...)
+  if _unique.getVirtual(p) and _unique.getVirtual(p)[f] then
+    return _unique.getVirtual(p)[f](_unique.getVirtual(p), ...)
+  else
+    return {}
+  end
+end
+
+function _unique.removeVirtual(p)
+  if virtuals[p] then virtuals[p] = nil end
+end
+
+function _unique.list(path)
+  local ret = {}
+
+  for k, v in pairs(virtuals) do
+    if k:sub(1, #path) == path then
+      table.insert(ret, k)
     end
   end
 
-  return oldfs.list(p) -- fallback to ccfs
+  for k, v in pairs(_unique.callFunctionInOwnerFor(path, 'list')) do
+    table.insert(ret, v)
+  end
+
+  return ret
 end
 
 function _unique.exists(p)
-  for k, v in pairs(_unique._registers) do
-    if v.isOwnerOf and v.exists then
-      if v:isOwnerOf(p) then
-        return v:exists(p)
-      end
-    end
+  if _unique.isVirtual(p) then
+    return true
   end
-
-  return oldfs.exists(p) -- fallback to ccfs
+  return _unique.callFunctionInOwnerFor(p, 'exists')
 end
 
 function _unique.isDir(p)
-  for k, v in pairs(_unique._registers) do
-    if v.isOwnerOf and v.isDir then
-      if v:isOwnerOf(p) then
-        return v:isDir(p)
-      end
+  if _unique.isVirtual(p) then
+    if type(_unique.getVirtual(p).isReadOnly) == 'function' then
+      return _unique.callVirtual(p, 'isDir')
+    elseif type(_unique.getVirtual(p).isReadOnly) == 'boolean' then
+      return _unique.getVirtual(p).isDir
     end
   end
-
-  return oldfs.isDir(p) -- fallback to ccfs
+  return _unique.callFunctionInOwnerFor(p, 'isDir')
 end
 
 function _unique.isReadOnly(p)
-  for k, v in pairs(_unique._registers) do
-    if v.isOwnerOf and v.isReadOnly then
-      if v:isOwnerOf(p) then
-        return v:isReadOnly(p)
-      end
+  if _unique.isVirtual(p) then
+    if type(_unique.getVirtual(p).isReadOnly) == 'function' then
+      return _unique.callVirtual(p, 'isReadOnly')
+    elseif type(_unique.getVirtual(p).isReadOnly) == 'boolean' then
+      return _unique.getVirtual(p).isReadOnly
     end
   end
 
-  return oldfs.isReadOnly(p) -- fallback to ccfs
+  return _unique.callFunctionInOwnerFor(p, 'isReadOnly') or false
+end
+
+local function split(inputstr, sep)
+  sep = sep or "%s"
+  local t={} ; i=1
+  for str in string.gmatch(inputstr, '([^'..sep..']+)') do
+    t[i] = str
+    i = i + 1
+  end
+  return t
 end
 
 function _unique.getName(p)
-  for k, v in pairs(_unique._registers) do
-    if v.isOwnerOf and v.getName then
-      if v:isOwnerOf(p) then
-        return v:getName(p)
-      end
-    end
-  end
-
-  return oldfs.getName(p)
-end
-
-function _unique.getDrive(p)
-  for k, v in pairs(_unique._registers) do
-    if v.isOwnerOf and v.getDrive then
-      if v:isOwnerOf(p) then
-        return v:getDrive(p)
-      end
-    end
-  end
-
-  return oldfs.getDrive(p)
+  return split(p, '/')[#(split(p, '/'))]
 end
 
 function _unique.getSize(p)
-  for k, v in pairs(_unique._registers) do
-    if v.isOwnerOf and v.getSize then
-      if v:isOwnerOf(p) then
-        return v:getSize(p)
-      end
-    end
+  if _unique.isVirtual(p) then
+    return 0
   end
 
-  return oldfs.getSize(p)
+  return _unique.callFunctionInOwnerFor(p, 'getSize')
 end
 
 function _unique.getFreeSpace(p)
-  for k, v in pairs(_unique._registers) do
-    if v.isOwnerOf and v.getFreeSpace then
-      if v:getFreeSpace(p) then
-        return v:getFreeSpace(p)
-      end
-    end
+  if _unique.isVirtual(p) then
+    return _unique.callVirtual(p, 'getFreeSpace')
   end
 
-  return oldfs.getFreeSpace(p)
+  return _unique.callFunctionInOwnerFor(p, 'getFreeSpace')
 end
 
 function _unique.makeDir(p)
-  for k, v in pairs(_unique._registers) do
-    if v.canMakeDir and v.makeDir then
-      if v:canMakeDir(p) then
-        return v:makeDir(p)
-      end
-    end
+  if not _unique.exists(p) then
+    return _unique.callFunctionInOwnerFor(p, 'makeDir')
   end
-
-  return oldfs.makeDir(p)
 end
 
-function _unique.move(s, t)
-  for k, v in pairs(_unique._registers) do
-    if v.isOwnerOf and v.canMoveTo and v.move then
-      if v:isOwnerOf(s) and v:canMoveTo(t) then
-        return v:move(s, t)
-      end
-    end
+function _unique.move(p, e)
+  if _unique.isVirtual(p) and not _unique.exists(e) then
+    return _unique.callVirtual(p, 'move', e)
   end
 
-  return oldfs.move(s, t)
+  return _unique.callFunctionInOwnerFor(p, 'move', e)
 end
 
-function _unique.copy(s, t)
-  for k, v in pairs(_unique._registers) do
-    if v.isOwnerOf and v.canCopyTo and v.move then
-      if v:isOwnerOf(s) and v:canCopyTo(t) then
-        return v:canCopyTo(s, t)
-      end
-    end
+function _unique.copy(p, e)
+  if _unique.isVirtual(p) and not _unique.exists(e) then
+    return _unique.callVirtual(p, 'copy', e)
   end
 
-  return oldfs.move(s, t)
+  return _unique.callFunctionInOwnerFor(p, 'copy', e)
 end
 
-function _unique.delete(s)
-  for k, v in pairs(_unique._registers) do
-    if v.isOwnerOf and v.delete then
-      if v:isOwnerOf(s) and v.delete then
-        return v:delete(s)
-      end
-    end
+function _unique.delete(p)
+  if _unique.isVirtual(p) then
+    return _unique.callVirtual(p, 'delete')
   end
 
-  return oldfs.delete(s)
+  if not _unique.exists(p) and not _unique.isReadOnly(p) then
+    return _unique.callFunctionInOwnerFor(p, 'delete')
+  end
 end
 
-function _unique.combine(s, t)
-  if s:sub(#s, #s) == '/' then
-    return s .. t
+function _unique.combine(p1, p2)
+  return oldfs.combine(p1, p2)
+end
+
+function _unique.open(path, mode)
+  if _unique.isVirtual(path) then
+    return _unique.callVirtual(path, 'open', mode)
+  end
+
+  if _unique.exists(path) then
+    return _unique.callFunctionInOwnerFor(path, 'open', mode)
   else
-    return s .. '/' .. t
+    printError('vfs: file ' .. path .. ' does not exist.')
   end
-end
-
-function _unique.open(p, m)
-  for k, v in pairs(_unique._registers) do
-    if v.isOwnerOf and v.open then
-      if v:isOwnerOf(p) then
-        return v:open(p, m)
-      end
-    end
-  end
-
-  return oldfs.open(p, m)
 end
 
 function _unique.find(wild)
-  for k, v in pairs(_unique._registers) do
-    if v.find then
-      return v:find(wild)
-    end
-  end
-
   return oldfs.find(wild)
 end
 
-function _unique.getDir(wild)
-  for k, v in pairs(_unique._registers) do
-    if v.getDir then
-      return v:getDir(wild)
-    end
+function fs.getDir(p)
+  if _unique.isVirtual(p) then
+    return _unique.callVirtual(p, 'getDir')
   end
 
-  return oldfs.getDir(wild)
+  return _unique.callFunctionInOwnerFor(p, 'getDir')
 end
 
 local fs = setmetatable({}, {
   ['__index'] = function(_, k)
-    return rawget(_unique, k)
+    return rawget(_unique, k) or oldfs[k]
   end
 })
 

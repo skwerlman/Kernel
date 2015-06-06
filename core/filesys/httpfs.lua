@@ -179,4 +179,6 @@ function httpfs:getDir(path)
   return (string.split(path, '/'))[#(string.split(path, '/')) - 1]
 end
 
+httpfs.id = 'httpfs'
+
 return httpfs
