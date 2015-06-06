@@ -68,7 +68,9 @@ end
 
 function tty.mktty(id, obj)
   if not fs.exists('/dev/') then
-    fs.addVirtual('/dev', {isDir=true})
+    fs.addVirtual('/dev', {
+      isDir = true,
+      dir = '/'})
   end
 
   fs.addVirtual('/dev/tty'..id, {

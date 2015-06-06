@@ -41,7 +41,8 @@ function _unique.getOwnerFor(path)
   if path then
     for k, v in pairs(_unique._registers) do
       if v.isOwnerOf and v:isOwnerOf(path) then
-        return v
+
+      return v
       end
     end
 
@@ -108,13 +109,12 @@ end
 
 function _unique.list(path)
   local ret = {}
-
+  if path == '' then
+    path = '/'
+  end
   for k, v in pairs(virtuals) do
-    if v.dir then
-      if fs.combine('/', v.dir) == path then
-        table.insert(ret, k)
-      end
-    elseif not v.dir and path == '/' then
+    local dir = _unique.getDir(k) == '' and '/' or _unique.getDir(k)
+    if dir == path then
       table.insert(ret, k)
     end
   end
@@ -160,7 +160,9 @@ function _unique.isReadOnly(p)
       return _unique.getVirtual(p).isReadOnly
     end
   end
-
+  if p == 'kernel' then
+    return true
+  end
   return _unique.callFunctionInOwnerFor(p, 'isReadOnly') or false
 end
 
@@ -276,5 +278,6 @@ local fs = setmetatable({}, {
     return rawget(_unique, k) or oldfs[k]
   end
 })
+
 
 return fs
