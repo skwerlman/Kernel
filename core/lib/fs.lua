@@ -96,7 +96,7 @@ end
 
 function _unique.callVirtual(p, f, ...)
   if _unique.getVirtual(p) and _unique.getVirtual(p)[f] then
-    return _unique.getVirtual(p)[f](_unique.getVirtual(p), ...)
+    return _unique.getVirtual(p)[f](_unique.getVirtual(p), p, ...)
   else
     return {}
   end
@@ -110,13 +110,25 @@ function _unique.list(path)
   local ret = {}
 
   for k, v in pairs(virtuals) do
-    if k:sub(1, #path) == path then
+    if v.dir then
+      if fs.combine('/', v.dir) == path then
+        table.insert(ret, k)
+      end
+    elseif not v.dir and path == '/' then
       table.insert(ret, k)
     end
   end
 
-  for k, v in pairs(_unique.callFunctionInOwnerFor(path, 'list')) do
-    table.insert(ret, v)
+  if not fs.isVirtual(path) then
+    for k, v in pairs(_unique.callFunctionInOwnerFor(path, 'list')) do
+      table.insert(ret, v)
+    end
+  else
+    if _unique.getVirtual(path).list then
+      for k, v in pairs(_unique.callVirtual(path, 'list')) do
+        table.insert(ret, v)
+      end
+    end
   end
 
   return ret
@@ -131,9 +143,9 @@ end
 
 function _unique.isDir(p)
   if _unique.isVirtual(p) then
-    if type(_unique.getVirtual(p).isReadOnly) == 'function' then
+    if type(_unique.getVirtual(p).isDir) == 'function' then
       return _unique.callVirtual(p, 'isDir')
-    elseif type(_unique.getVirtual(p).isReadOnly) == 'boolean' then
+    elseif type(_unique.getVirtual(p).isDir) == 'boolean' then
       return _unique.getVirtual(p).isDir
     end
   end
@@ -171,7 +183,11 @@ function _unique.getSize(p)
     return 0
   end
 
-  return _unique.callFunctionInOwnerFor(p, 'getSize')
+  if not _unique.isVirtual(p) then
+    return _unique.callFunctionInOwnerFor(p, 'getSize')
+  else
+    return 0
+  end
 end
 
 function _unique.getFreeSpace(p)
@@ -235,11 +251,24 @@ function _unique.find(wild)
 end
 
 function _unique.getDir(p)
+  return oldfs.getDir(p)
+end
+
+function _unique.ioctl(p, r, ...)
   if _unique.isVirtual(p) then
-    return _unique.callVirtual(p, 'getDir')
+    return _unique.callVirtual(p, 'ioctl', r, ...)
   end
 
-  return _unique.callFunctionInOwnerFor(p, 'getDir')
+  local ownerOfP = _unique.getOwnerFor(p)
+  if ownerOfP == oldfs then
+    return
+  else
+    if ownerOfP.ioctl then
+      return ownerOfP:ioctl(p, r, ...)
+    else
+      return
+    end
+  end
 end
 
 local fs = setmetatable({}, {
