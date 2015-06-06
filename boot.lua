@@ -156,6 +156,28 @@ if fs.exists(fs.combine(kRoot, '/core/lib')) then
   end
 end
 
+if fs.exists(fs.combine(kRoot, '/core/filesys')) then
+  for k, v in pairs(fs.list(fs.combine(kRoot, '/core/filesys'))) do
+    if not fs.isDir(fs.combine(fs.combine(kRoot, '/core/filesys'), v)) then
+      local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/filesys'), v))
+      kmsg.post('core', 'loaded filesystem %s.', v)
+      if not ok then
+        printError(err)
+      else
+        local ok, val = pcall(ok)
+        if ok then
+          fs.register(({string.gsub(v, '.lua', '')})[1], val)
+        else
+          printError('failed to load library ' .. v .. ': ' .. val)
+          while true do
+            print('\b')
+          end
+        end
+      end
+    end
+  end
+end
+
 if fs.exists(fs.combine(kRoot, '/core/lib/init')) then
   _G.init = {}
   for k, v in pairs(fs.list(fs.combine(kRoot, '/core/lib/init'))) do
