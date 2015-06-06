@@ -45,7 +45,7 @@ function httpfs:open(path, m)
     else
       handle._data = d.readAll()
     end
-    
+
     setmetatable(handle, {
       ['__index'] = function(_, k)
         if k:sub(1, 1) == '_' then
@@ -169,6 +169,14 @@ function httpfs:open(path, m)
 
     return handle
   end
+end
+
+function httpfs:getDrive(path)
+  return (string.split(path, '/'))[3]
+end
+
+function httpfs:getDir(path)
+  return (string.split(path, '/'))[#(string.split(path, '/')) - 1]
 end
 
 return httpfs
