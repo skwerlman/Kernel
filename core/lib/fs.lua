@@ -244,11 +244,7 @@ function _unique.open(path, mode)
     return _unique.callVirtual(path, 'open', mode)
   end
 
-  if _unique.exists(path) then
-    return _unique.callFunctionInOwnerFor(path, 'open', mode)
-  else
-    printError('vfs: file ' .. path .. ' does not exist.')
-  end
+  return _unique.callFunctionInOwnerFor(path, 'open', mode)
 end
 
 function _unique.find(wild)

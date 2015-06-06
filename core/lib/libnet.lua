@@ -119,6 +119,7 @@ end
 
 --[[
   Why is this here? Because @DemHydraz doesn't believe in globals.
+	I don't believe in globals unless there is evidence that globals exist! -@DemHydraz
 ]]
 local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
