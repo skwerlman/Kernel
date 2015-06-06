@@ -115,6 +115,9 @@ function _unique.list(path)
   for k, v in pairs(virtuals) do
     local dir = _unique.getDir(k) == '' and '/' or _unique.getDir(k)
     if dir == path then
+      if oldfs.getDir(k) == dir then
+        k = k:gsub(oldfs.getDir(k), '')
+      end
       table.insert(ret, k)
     end
   end
