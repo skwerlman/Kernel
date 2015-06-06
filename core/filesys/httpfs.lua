@@ -33,11 +33,19 @@ end
 function httpfs:open(path, m)
   if m == 'r' then
     local handle = {
-      _data = http.get(path, {
-        ['User-Agent'] = 'fs.httpfs (tardix)'
-      }).readAll()
+      _data = 0
     }
 
+    local d = http.get(path, {
+      ['User-Agent'] = 'fs.httpfs (tardix)'
+    })
+
+    if not d then
+      error('file not found', 2)
+    else
+      handle._data = d.readAll()
+    end
+    
     setmetatable(handle, {
       ['__index'] = function(_, k)
         if k:sub(1, 1) == '_' then
@@ -47,6 +55,8 @@ function httpfs:open(path, m)
         end
       end
     })
+
+
 
     function handle.readAll()
       local ret = handle._data
