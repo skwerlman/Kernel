@@ -71,10 +71,12 @@ function _unique.isVirtual(p)
   if not p then
     return false
   else
-    if p:sub(1,1) == '/' then
-      return virtuals[p] ~= nil
+    if virtuals[p] ~= nil then
+      return true
+    elseif virtuals['/' .. p] ~= nil then
+      return true
     else
-      return virtuals['/' .. p] ~= nil
+      return false
     end
   end
 end
@@ -99,7 +101,7 @@ function _unique.callVirtual(p, f, ...)
   if _unique.getVirtual(p) and _unique.getVirtual(p)[f] then
     return _unique.getVirtual(p)[f](_unique.getVirtual(p), p, ...)
   else
-    return {}
+    return nil
   end
 end
 
@@ -115,20 +117,24 @@ function _unique.list(path)
   for k, v in pairs(virtuals) do
     local dir = _unique.getDir(k) == '' and '/' or _unique.getDir(k)
     if dir == path then
-      if oldfs.getDir(k) == dir then
-        k = k:gsub(oldfs.getDir(k), '')
-      end
+      k = k:gsub(dir, '')
       table.insert(ret, k)
     end
   end
 
   if not fs.isVirtual(path) then
     for k, v in pairs(_unique.callFunctionInOwnerFor(path, 'list')) do
+      if oldfs.getDir(v) == path then
+        v = v:gsub(oldfs.getDir(v), '')
+      end
       table.insert(ret, v)
     end
   else
     if _unique.getVirtual(path).list then
       for k, v in pairs(_unique.callVirtual(path, 'list')) do
+        if oldfs.getDir(v) == path then
+          v = v:gsub(oldfs.getDir(v), '')
+        end
         table.insert(ret, v)
       end
     end
@@ -146,10 +152,17 @@ end
 
 function _unique.isDir(p)
   if _unique.isVirtual(p) then
-    if type(_unique.getVirtual(p).isDir) == 'function' then
-      return _unique.callVirtual(p, 'isDir')
-    elseif type(_unique.getVirtual(p).isDir) == 'boolean' then
-      return _unique.getVirtual(p).isDir
+    if _unique.getVirtual(p).isDir ~= nil then
+      if type(_unique.getVirtual(p).isDir) == 'function' then
+        print(_unique.callVirtual(p, 'isDir'))
+        return _unique.callVirtual(p, 'isDir')
+      elseif type(_unique.getVirtual(p).isDir) == 'boolean' then
+        return _unique.getVirtual(p).isDir
+      else
+        return false
+      end
+    else
+      return false
     end
   end
   return _unique.callFunctionInOwnerFor(p, 'isDir')
@@ -161,9 +174,11 @@ function _unique.isReadOnly(p)
       return _unique.callVirtual(p, 'isReadOnly')
     elseif type(_unique.getVirtual(p).isReadOnly) == 'boolean' then
       return _unique.getVirtual(p).isReadOnly
+    else
+      return false
     end
   end
-  if p == 'kernel' then
+  if p == 'kernel' or fs.getDir(p) == 'kernel' then
     return true
   end
   return _unique.callFunctionInOwnerFor(p, 'isReadOnly') or false
@@ -204,6 +219,10 @@ function _unique.getFreeSpace(p)
 end
 
 function _unique.makeDir(p)
+  if _unique.isReadOnly(p) then
+    error(p .. ' is read only.')
+  end
+
   if not _unique.exists(p) then
     return _unique.callFunctionInOwnerFor(p, 'makeDir')
   end
@@ -230,7 +249,7 @@ function _unique.delete(p)
     return _unique.callVirtual(p, 'delete')
   end
 
-  if not _unique.exists(p) and not _unique.isReadOnly(p) then
+  if _unique.exists(p) and not _unique.isReadOnly(p) then
     return _unique.callFunctionInOwnerFor(p, 'delete')
   end
 end

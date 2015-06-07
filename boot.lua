@@ -132,10 +132,21 @@ end
 
 _G.kmsg = ok()
 
+local ok, err = loadfile(fs.combine(kRoot, '/core/filesys.lua'))
+if not ok then
+  printError(err)
+  while true do
+    coroutine.yield()
+  end
+end
+
+_G.fs = ok()
+
+
 kmsg.post('core', 'tardix kernel attempting initialization now')
 
 if fs.exists(fs.combine(kRoot, '/core/lib')) then
-  for k, v in pairs(fs.list(fs.combine(kRoot, '/core/lib'))) do
+  for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/lib'))) do
     if not fs.isDir(fs.combine(fs.combine(kRoot, '/core/lib'), v)) then
       local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/lib'), v))
       kmsg.post('core', 'loaded library %s.', v)
@@ -157,7 +168,7 @@ if fs.exists(fs.combine(kRoot, '/core/lib')) then
 end
 
 if fs.exists(fs.combine(kRoot, '/core/filesys')) then
-  for k, v in pairs(fs.list(fs.combine(kRoot, '/core/filesys'))) do
+  for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/filesys'))) do
     if not fs.isDir(fs.combine(fs.combine(kRoot, '/core/filesys'), v)) then
       local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/filesys'), v))
       kmsg.post('core', 'loaded filesystem %s.', v)
@@ -180,7 +191,7 @@ end
 
 if fs.exists(fs.combine(kRoot, '/core/lib/init')) then
   _G.init = {}
-  for k, v in pairs(fs.list(fs.combine(kRoot, '/core/lib/init'))) do
+  for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/lib/init'))) do
     local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/lib/init'), v))
     if not ok then
       printError(err)
@@ -193,12 +204,12 @@ end
 
 if fs.exists(fs.combine(kRoot, '/core/mod')) then
   if not kernelcmd['nomods'] and module and fs.exists(fs.combine(kRoot, '/core/mod')) then
-    for k, v  in pairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
+    for k, v  in ipairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
       loadfile(fs.combine(fs.combine(kRoot, '/core/mod'), v))()
     end
     module.probeAll('load')
   elseif kernelcmd['nomods'] and kernelcmd['loadmods'] and module and fs.exists(fs.combine(kRoot, '/core/mod')) then
-    for k, v in pairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
+    for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
       loadfile(fs.combine(fs.combine(kRoot, '/core/mod'), v))()
     end
     for k, v in pairs(kernelcmd['loadmods']) do
@@ -328,7 +339,7 @@ kmsg.post('kthread', 'starting kernel thread')
 run.exec(fs.combine(kRoot, '/core/kthread.lua'))
 
 if fs.exists(fs.combine(kRoot, '/core/events')) then
-  for k, v in pairs(fs.list(fs.combine(kRoot, '/core/events'))) do
+  for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/events'))) do
     kmsg.post('kthread', 'added event handler %s', v)
     kthread.addFile(fs.combine(fs.combine(kRoot,'/core/events'), v))
   end

@@ -121,9 +121,6 @@ local regist = {}
 function devbus.populate()
   os.queueEvent('devbus', 'populate')
 
-  if fs.exists('/sys/dev') then
-    fs.delete('/sys/dev')
-  end
   local counts = {['chr'] = 0, ['cmp'] = 0, ['blk'] = 0, ['opp'] = 0, ['utp'] = 0}
 
   local devices = devbus.discover()
@@ -141,31 +138,21 @@ function devbus.populate()
   for k, v in pairs(devices) do
     local typ = findDeviceType(k)
     local nam = findDeviceType(k) .. tostring(counts[typ])
-
-    local dev_node = fs.open('/sys/dev/' .. nam, 'w') do
-      if dev_node then
-        dev_node.write(('--@type=%s\n--@name=%s\n--@side=%s\n\n--<<EOF>>\n\n'):format(_peripheral.getType(k), string.randomize('xxyy:xxyy-xxxx@xxyy'), k))
-        dev_node.write('return devbus.device.byName(\''.. nam ..'\')')
-        devices[k].meta = {
-          ['node_name'] = nam,
-          ['raw_type'] = _peripheral.getType(k),
-          ['pro_type'] = typ,
-          ['type_hum'] = ((typ == 'chr' and 'Character Device: ')
-            or (typ == 'cmp' and 'Computer Device :')
-            or (typ == 'blk' and 'Block Device: ')
-            or (typ == 'opp' and 'OpenPeripherals Device: ')
-            or 'Unrecognized Device: ') .. _peripheral.getType(k)
-         }
-       end
+    devices[k].meta = {
+      ['node_name'] = nam,
+      ['raw_type'] = _peripheral.getType(k),
+      ['pro_type'] = typ,
+      ['type_hum'] = ((typ == 'chr' and 'Character Device: ')
+        or (typ == 'cmp' and 'Computer Device :')
+        or (typ == 'blk' and 'Block Device: ')
+        or (typ == 'opp' and 'OpenPeripherals Device: ')
+        or 'Unrecognized Device: ') .. _peripheral.getType(k)
+      }
       if _peripheral.getType(k) == 'modem' then
         if rednet and not rednet.isOpen() then
           rednet.open(k)
         end
       end
-      if not dev_node then
-        kmsg.post('devbus', 'failed to open ' .. '/sys/dev/' .. nam)
-      end
-    end if dev_node then dev_node.close() end
     counts[typ] = counts[typ] + 1
   end
 

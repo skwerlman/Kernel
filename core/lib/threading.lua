@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
-fs.delete('/sys/proc')
+fs.delete('/proc')
 local ret = {
   thread = {},
   process = {},
@@ -29,7 +29,7 @@ local ret = {
 
 function ret.thread:new( f, p )
   local t = {}
-  t.tid = string.randomize and string.randomize("xxyy:xxyy-xxxx@xxyy") or math.random()
+  t.tid = string.randomize and string.randomize("xxyy-yxxy") or math.random()
   t.state = 'running'
   t.environment = setmetatable( {}, { __index = getfenv( 2 ) } )
   if p then
@@ -127,7 +127,7 @@ function ret.process:new( name )
   p.tid = rID
   p.name = name or rID
   p.children = {}
-  p.stdstreams_dir = fs.combine(fs.combine('/sys/proc/', rID), 'streams')
+  p.stdstreams_dir = fs.combine(fs.combine('/proc/', rID), 'streams')
 
   setmetatable( p, {
     __index = self;
@@ -181,7 +181,7 @@ function ret.process:update( event, ... )
   if self.onUpdate then
     self:onUpdate()
   end
-  
+
   return true, #self.children == 0 and 'die'
 end
 
