@@ -84,7 +84,7 @@ function table.filter(tab, fun)
 
   for k, v in pairs(tab) do
     if fun(k, v) == true then
-      ret[k] = v
+      table.insert(ret, v)
     end
   end
 
@@ -188,6 +188,30 @@ if fs.exists(fs.combine(kRoot, '/core/filesys')) then
     end
   end
 end
+
+if fs.exists(fs.combine(kRoot, '/core/mount')) then
+  for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/mount'))) do
+    if not fs.isDir(fs.combine(fs.combine(kRoot, '/core/mount'), v)) then
+      local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/mount'), v))
+      kmsg.post('core', 'loaded mount %s.', v)
+      if not ok then
+        printError(err)
+      else
+        local ok, val = pcall(ok)
+        if ok then
+          fs.mount(({string.gsub(v, '.lua', '')})[1], val)
+        else
+          printError('failed to load mount ' .. v .. ': ' .. val)
+          kmsg.post('core', 'failed to load mount ' .. v .. ': ' .. val)
+          while true do
+            sleep(0)
+          end
+        end
+      end
+    end
+  end
+end
+
 
 if fs.exists(fs.combine(kRoot, '/core/lib/init')) then
   _G.init = {}

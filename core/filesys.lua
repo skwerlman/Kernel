@@ -75,6 +75,8 @@ function _unique.isVirtual(p)
       return true
     elseif virtuals['/' .. p] ~= nil then
       return true
+    elseif virtuals['/' .. p .. '/'] ~= nil then
+      return true
     else
       return false
     end
@@ -118,6 +120,15 @@ function _unique.list(path)
     local dir = _unique.getDir(k) == '' and '/' or _unique.getDir(k)
     if dir == path then
       k = k:gsub(dir, '')
+
+      local num = 1
+
+      repeat
+        if k:sub(num, num) == '/' then
+          k = k:sub(num + 1, #k)
+          num = num + 1
+        end
+      until k:sub(num, #k) ~= '/'
       table.insert(ret, k)
     end
   end
@@ -223,6 +234,10 @@ function _unique.makeDir(p)
     error(p .. ' is read only.')
   end
 
+  if _unique.isVirtual(fs.getDir(p)) then
+    _unique.callVirtual(fs.getDir(p), 'makeDir', p)
+  end
+
   if not _unique.exists(p) then
     return _unique.callFunctionInOwnerFor(p, 'makeDir')
   end
@@ -259,6 +274,12 @@ function _unique.combine(p1, p2)
 end
 
 function _unique.open(path, mode)
+  if _unique.isVirtual(fs.getDir(path)) then
+    if _unique.getVirtual(fs.getDir(path)).open_child then
+      return _unique.callVirtual(fs.getDir(path), 'open_child', path, mode)
+    end
+  end
+
   if _unique.isVirtual(path) then
     return _unique.callVirtual(path, 'open', mode)
   end
@@ -288,6 +309,31 @@ function _unique.ioctl(p, r, ...)
     else
       return
     end
+  end
+end
+
+local _vmounts = {}
+
+function _unique.mount(root, files)
+  fs.addVirtual(root, files.rootn or {isDir=true})
+  if not _vmounts[root] then
+    for k, v in pairs(files) do
+      if k ~= 'rootn' then
+        _unique.addVirtual(fs.combine(root, k), v)
+      end
+    end
+    _vmounts[root] = files
+  end
+end
+
+
+function _unique.umount(root)
+  fs.removeVirtual(root)
+  if _vmounts[root] then
+    for k, v in pairs(_vmounts[root]) do
+      _unique.removeVirtual(fs.combine(root, k), v)
+    end
+    _vmounts[root] = nil
   end
 end
 

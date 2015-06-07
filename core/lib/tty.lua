@@ -135,7 +135,6 @@ function tty.mktty(id, obj)
     open = _ttyopen,
     ioctl = _ttyioctl,
     obj = obj,
-    dir = '/dev'
   })
 end
 
