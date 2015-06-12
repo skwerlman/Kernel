@@ -115,7 +115,7 @@ end
 function run.exec(file, ...)
   if fs.exists(file) then
     local mFn = run.dailin.link(file)
-    if not mFn['main'] then
+    if not mFn['main'] or not mFn['Main'] and not mFn['main'] then
       printError('in file ' .. file .. ': failed to execute. no public main function. Existing functions are:')
     elseif mFn['main'] then
       return doExec(mFn, file, mFn['main'], ...) or false
@@ -134,7 +134,7 @@ function run.exece(env, file, ...)
         rawget(env, k))
       end
     })
-    if not mFn or not mFn['main'] then
+    if not mFn or not mFn['main'] and not mFn['Main'] then
       printError('in file ' .. file .. ': failed to execute. no public main function. Existing functions are:')
     elseif mFn['main'] then
       return doExec(p, file, mFn['main'], ...) or false
