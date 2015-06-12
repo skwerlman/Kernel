@@ -117,8 +117,10 @@ function run.exec(file, ...)
     local mFn = run.dailin.link(file)
     if not mFn['main'] then
       printError('in file ' .. file .. ': failed to execute. no public main function. Existing functions are:')
-    else
+    elseif mFn['main'] then
       return doExec(mFn, file, mFn['main'], ...) or false
+    elseif mFn['Main'] then
+      return doExec(mFn, file, mFn['Main'], ...) or false
     end
   end
 end
@@ -126,17 +128,18 @@ end
 function run.exece(env, file, ...)
   if fs.exists(file) then
     local mFn = run.dailin.link(file, env)
+    local p = setmetatable({}, {
+      ['__index'] = function(_, k)
+        return (rawget(mFn, k) or
+        rawget(env, k))
+      end
+    })
     if not mFn or not mFn['main'] then
       printError('in file ' .. file .. ': failed to execute. no public main function. Existing functions are:')
-    else
-      local p = setmetatable({}, {
-        ['__index'] = function(_, k)
-          return (rawget(mFn, k) or
-          rawget(env, k))
-        end
-      })
-
+    elseif mFn['main'] then
       return doExec(p, file, mFn['main'], ...) or false
+    elseif mFn['Main'] then
+      return doExec(p, file, mFn['Main'], ...) or false
     end
   end
 end
