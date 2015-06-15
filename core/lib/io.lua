@@ -32,7 +32,7 @@ end)(getfenv(2).io)
 local newio = {}
 local streams = {}
 
-setmetatable(newio, {
+--[[setmetatable(newio, {
   ['__index'] = function(_, k)
     local s;
     if getfenv(2).threading and getfenv(2).threading.this then
@@ -98,7 +98,7 @@ setmetatable(newio, {
       return nil
     end
   end
-})
+})]]
 
 return setmetatable({}, {
   ['__index'] = function(_, k)

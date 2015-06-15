@@ -120,15 +120,6 @@ function _unique.list(path)
     local dir = _unique.getDir(k) == '' and '/' or _unique.getDir(k)
     if dir == path then
       k = k:gsub(dir, '')
-
-      local num = 1
-
-      repeat
-        if k:sub(num, num) == '/' then
-          k = k:sub(num + 1, #k)
-          num = num + 1
-        end
-      until k:sub(num, #k) ~= '/'
       table.insert(ret, k)
     end
   end

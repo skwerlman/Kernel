@@ -27,11 +27,11 @@ local ret = {
   process = {},
 }
 
-function ret.thread:new( f, p )
+function ret.thread:new(f, p)
   local t = {}
   t.tid = string.randomize and string.randomize("xxyy-yxxy") or math.random()
   t.state = 'running'
-  t.environment = setmetatable( {}, { __index = getfenv( 2 ) } )
+  t.environment = setmetatable({}, { __index = getfenv(2) })
   if p then
     if t.environment.process then
       t.environment.process.this = p
@@ -43,25 +43,25 @@ function ret.thread:new( f, p )
   end
   t.filter = nil
 
-  t.raw_environment = setmetatable( {}, {
-    __index = function( _, k )
+  t.raw_environment = setmetatable({}, {
+    __index = function(_, k)
       return t.environment[k]
     end,
-    __newindex = function( _, k, v )
+    __newindex = function(_, k, v)
       t.environment[k] = v
     end
-  } )
+  })
 
-  setfenv( f, t.raw_environment )
+  setfenv(f, t.raw_environment)
   t.func = f
-  t.co = coroutine.create( f )
+  t.co = coroutine.create(f)
 
-  setmetatable( t, {
+  setmetatable(t, {
     __index = self;
-    __type = function( self )
+    __type = function(self)
       return self:type()
     end;
-  } )
+  })
   os.queueEvent('thread_construct, ', t.tid)
   return t
 end
@@ -90,22 +90,22 @@ end
 function ret.thread:restart()
   os.queueEvent('thread_restart', t.tid)
   self.state = 'running'
-  self.co = coroutine.create( self.func )
+  self.co = coroutine.create(self.func)
 end
 
-function ret.thread:update( event, ... )
+function ret.thread:update(event, ...)
   --os.queueEvent('thread_update', self.tid, {event, ...})
   if self.state ~= 'running' then return true, self.state end -- if not running, don't update
   if self.filter ~= nil and self.filter ~= event then return true, self.filter end -- if filtering an event, don't update
 
-  local ok, data = coroutine.resume( self.co, event, ... )
+  local ok, data = coroutine.resume(self.co, event, ...)
   if not ok then
     print(data)
     self.state = 'stopped'
     return false, data
   end
 
-  if coroutine.status( self.co ) == 'dead' then
+  if coroutine.status(self.co) == 'dead' then
     self.state = 'stopped'
     return true, 'die'
   end
@@ -120,59 +120,85 @@ end
 
 local process = {}
 
-function ret.process:new( name )
+function ret.process:new(name)
   local rID = string.randomize and string.randomize("xxyy") or math.random()
   local p = {}
   kobj.add(name, 'proc', {isDir=true})
-  kobj.add(name .. '/rID', 'proc', {
-    open = function(_, m)
-      return {
-        readLine = function() return rID end,
-        readAll = function() return rAll end
-      }
-    end
-  })
   p.tid = rID
   p.name = name or rID
   p.children = {}
   p.stdstreams_dir = fs.combine(fs.combine('/proc/', rID), 'streams')
 
-  setmetatable( p, {
+  kobj.add(name .. '/rID', 'proc', {
+    open = function(_, m)
+      return {
+        readLine = function() return rID end,
+        readAll = function() return rID end,
+        close = function() end
+      }
+    end,
+    isReadOnly = true
+  })
+
+  kobj.add(name .. '/streams', 'proc', {
+    open = function(_, m)
+      return {
+        readLine = function() return p.stdstreams_dir end,
+        readAll = function() return p.stdstreams_dir end,
+        close = function() end
+      }
+    end,
+    isReadOnly = true
+  })
+
+  kobj.add(name .. '/name', 'proc', {
+    open = function(_, m)
+      return {
+        readLine = function() return p.name end,
+        readAll = function() return p.name end,
+        close = function() end
+      }
+    end,
+    isReadOnly = true
+  })
+
+
+  setmetatable(p, {
     __index = self;
-    __type = function( self )
+    __type = function(self)
       return self:type()
     end;
-  } )
-  os.queueEvent('process_construct', name or rID  )
+  })
+  os.queueEvent('process_construct', name or rID)
   return p
 end
 
-function ret.process:spawnThread( f, name )
+function ret.process:spawnThread(f, name)
   os.queueEvent('thread_spawn', f, self.tid)
-  local t = ret.thread:new( f, self )
+  local t = ret.thread:new(f, self)
   if name then
     t.name = name
   else
     t.name = string.randomize and string.randomize("xxyy:xxyy-xxxx@xxyy") or math.random()
   end
-  table.insert( self.children, 1, t )
+  table.insert(self.children, 1, t)
   return t
 end
 
 
-function ret.process:spawnSubprocess( name )
-  local p = ret.process:new( name )
-  table.insert( self.children, 1, p )
+function ret.process:spawnSubprocess(name)
+  local p = ret.process:new(name)
+  table.insert(self.children, 1, p)
   os.queueEvent('process_spawn', self.tid, p.tid)
   return p
 end
 
-function ret.process:update( event, ... )
+function ret.process:update(event, ...)
   for i = #self.children, 1, -1 do
-    local ok, data = self.children[i]:update( event, ... )
+    local ok, data = self.children[i]:update(event, ...)
     if not ok then
       if self.exceptionHandler then
-        self:exceptionHandler( self.children[i], data )
+        self:exceptionHandler(self.children[i], data)
       else
         return false, data
       end
@@ -182,7 +208,7 @@ function ret.process:update( event, ... )
       if self.onDie then
         self:onDie()
       end
-      table.remove( self.children, i )
+      table.remove(self.children, i)
     end
   end
 
@@ -221,12 +247,12 @@ function ret.process:restart()
   end
 end
 
-function ret.process:list( deep )
+function ret.process:list(deep)
   local t = {}
   for i = #self.children, 1, -1 do
     if self.children[i]:type() == 'process' then
       if deep then
-        local c = self.children[i]:list( true )
+        local c = self.children[i]:list(true)
         c.name = self.children[i].name
         t[#t + 1] = c
       else
