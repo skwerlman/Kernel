@@ -7,10 +7,10 @@ test.manifest = {
 }
 
 test.run = function(this)
-  local t = loadfile("core/lib/libnet.lua")
+  local t, e = loadfile("core/lib/libnet.lua")
 
   if t == nil then
-    error("t is nil, syntax error?")
+    error('syntax error: ' .. e)
   end
 end
 

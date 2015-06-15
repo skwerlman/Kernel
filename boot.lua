@@ -117,6 +117,11 @@ function table.join(...)
   return ret
 end
 
+function string:table()
+  local ret = {}
+  self:gsub('.', function(c) table.insert(ret, c) end)
+  return ret
+end
 
 ----------------------------------------------------------------------------------------------------------
 _G.kRoot = kernelcmd['kernel_root']
