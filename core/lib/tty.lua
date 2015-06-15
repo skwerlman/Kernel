@@ -122,14 +122,7 @@ local function _ttyioctl(vobj, path, request, ...)
 end
 
 function tty.mktty(id, obj)
-  if not fs.exists('/dev/') then
-    fs.addVirtual('/dev', {
-      dir = '/',
-      isDir = true
-    })
-  end
-
-  fs.addVirtual('/dev/tty'..id, {
+  kobj.add('tty'..id, 'dev', {
     isReadOnly = false,
     isDir = false,
     open = _ttyopen,

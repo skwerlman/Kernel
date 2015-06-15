@@ -126,6 +126,15 @@ end
 ----------------------------------------------------------------------------------------------------------
 _G.kRoot = kernelcmd['kernel_root']
 
+local ok, err = loadfile(fs.combine(kRoot, '/core/filesys.lua'))
+if not ok then
+  printError(err)
+  while true do
+    coroutine.yield()
+  end
+end
+
+_G.fs = ok()
 
 local ok, err = loadfile(fs.combine(kRoot, '/core/kmessage.lua'))
 if not ok then
@@ -137,7 +146,7 @@ end
 
 _G.kmsg = ok()
 
-local ok, err = loadfile(fs.combine(kRoot, '/core/filesys.lua'))
+local ok, err = loadfile(fs.combine(kRoot, '/core/kobj.lua'))
 if not ok then
   printError(err)
   while true do
@@ -145,7 +154,7 @@ if not ok then
   end
 end
 
-_G.fs = ok()
+_G.kobj = ok()
 
 
 kmsg.post('core', 'tardix kernel attempting initialization now')
