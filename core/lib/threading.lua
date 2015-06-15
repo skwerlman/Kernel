@@ -123,7 +123,7 @@ local process = {}
 function ret.process:new( name )
   local rID = string.randomize and string.randomize("xxyy") or math.random()
   local p = {}
-
+  kobj.add(name, 'proc', {isDir=true})
   p.tid = rID
   p.name = name or rID
   p.children = {}
