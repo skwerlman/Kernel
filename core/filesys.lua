@@ -269,17 +269,26 @@ function _unique.combine(p1, p2)
 end
 
 function _unique.open(path, mode)
-  if _unique.isVirtual(fs.getDir(path)) then
-    if _unique.getVirtual(fs.getDir(path)).open_child then
-      return _unique.callVirtual(fs.getDir(path), 'open_child', path, mode)
+  assert(type(path) == 'string', 'expected string for path, got ' .. type(path))
+  assert(type(mode) == 'string', 'expected string for mode, got ' .. type(mode))
+  if not fs.exists(fs.getDir(path)) then
+    fs.makeDir(fs.getDir(path))
+  end
+  if path and mode then
+    if _unique.isVirtual(fs.getDir(path)) then
+      if _unique.getVirtual(fs.getDir(path)).open_child then
+        return _unique.callVirtual(fs.getDir(path), 'open_child', path, mode)
+      end
     end
-  end
 
-  if _unique.isVirtual(path) then
-    return _unique.callVirtual(path, 'open', mode)
-  end
+    if _unique.isVirtual(path) then
+      return _unique.callVirtual(path, 'open', mode)
+    end
 
-  return _unique.callFunctionInOwnerFor(path, 'open', mode)
+    return _unique.callFunctionInOwnerFor(path, 'open', mode)
+  else
+    error('missing required argument path or mode.')
+  end
 end
 
 function _unique.find(wild)
