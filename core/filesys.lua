@@ -77,6 +77,8 @@ function _unique.isVirtual(p)
       return true
     elseif virtuals['/' .. p .. '/'] ~= nil then
       return true
+    elseif virtuals[p:sub(1, 1) == '/' and p:sub(2, #p)] ~= nil then
+      return true
     else
       return false
     end
@@ -84,12 +86,14 @@ function _unique.isVirtual(p)
 end
 
 function _unique.getVirtual(p)
-  if p:sub(1,1) == '/' then
+  if virtuals[p] ~= nil then
     return virtuals[p]
-  elseif virtuals[p] then
-    return virtuals[p]
-  else
+  elseif virtuals['/' .. p] ~= nil then
     return virtuals['/' .. p]
+  elseif virtuals['/' .. p .. '/'] ~= nil then
+    return virtuals['/' .. p .. '/']
+  elseif virtuals[p:sub(1, 1) == '/' and p:sub(2, #p)] ~= nil then
+    return virtuals[p:sub(1, 1) == '/' and p:sub(2, #p)]
   end
 end
 
@@ -119,8 +123,9 @@ function _unique.list(path)
   for k, v in pairs(virtuals) do
     local dir = _unique.getDir(k) == '' and '/' or _unique.getDir(k)
     if dir == path then
-      k = k:gsub(dir, '')
-      table.insert(ret, k)
+      table.insert(ret, ({k:gsub(dir, '')})[1])
+    elseif '/' .. dir == path then
+      table.insert(ret, ({k:gsub(dir, '')})[1])
     end
   end
 
@@ -132,7 +137,7 @@ function _unique.list(path)
       table.insert(ret, v)
     end
   else
-    if _unique.getVirtual(path).list then
+    if _unique.getVirtual(path) and _unique.getVirtual(path).list then
       for k, v in pairs(_unique.callVirtual(path, 'list')) do
         if oldfs.getDir(v) == path then
           v = v:gsub(oldfs.getDir(v), '')
@@ -156,7 +161,6 @@ function _unique.isDir(p)
   if _unique.isVirtual(p) then
     if _unique.getVirtual(p).isDir ~= nil then
       if type(_unique.getVirtual(p).isDir) == 'function' then
-        print(_unique.callVirtual(p, 'isDir'))
         return _unique.callVirtual(p, 'isDir')
       elseif type(_unique.getVirtual(p).isDir) == 'boolean' then
         return _unique.getVirtual(p).isDir
@@ -286,6 +290,10 @@ function _unique.getDir(p)
   return oldfs.getDir(p)
 end
 
+function _unique.getDrive(p)
+  return oldfs.getDrive(p)
+end
+
 function _unique.ioctl(p, r, ...)
   if _unique.isVirtual(p) then
     return _unique.callVirtual(p, 'ioctl', r, ...)
@@ -328,11 +336,7 @@ function _unique.umount(root)
   end
 end
 
-local fs = setmetatable({}, {
-  ['__index'] = function(_, k)
-    return rawget(_unique, k) or oldfs[k]
-  end
-})
+local fs = _unique
 
 
 return fs

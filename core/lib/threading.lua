@@ -27,16 +27,35 @@ local ret = {
   process = {},
 }
 
+local lastid = 0
+
 function ret.thread:new(f, p)
   local t = {}
   t.tid = string.randomize and string.randomize("xxyy-yxxy") or math.random()
   t.state = 'running'
   t.environment = setmetatable({}, { __index = getfenv(2) })
+  t.nid = lastid + 1
+  lastid = lastid + 1
+
+  kobj.add(p.name .. '/threads/' .. t.tid:sub(1, 3), 'proc', {isDir = true})
+
+  kobj.add(p.name .. '/threads/' .. t.tid:sub(1, 3) .. '/state', 'proc', {
+    open = function(_, m)
+      return {
+        readLine = function() return t.state end,
+        readAll = function() return t.state end,
+        close = function() end
+      }
+    end,
+    isReadOnly = true
+  })
+
+
   if p then
-    if t.environment.process then
-      t.environment.process.this = p
+    if t.environment.threading then
+      t.environment.threading.this = p
     else
-      t.environment.process = {
+      t.environment.threading = {
         ['this'] = p
       }
     end
@@ -124,11 +143,13 @@ function ret.process:new(name)
   local rID = string.randomize and string.randomize("xxyy") or math.random()
   local p = {}
   kobj.add(name, 'proc', {isDir=true})
+  kobj.add(name .. '/threads', 'proc', {isDir=true})
+
   p.tid = rID
   p.name = name or rID
   p.children = {}
   p.stdstreams_dir = fs.combine(fs.combine('/proc/', rID), 'streams')
-
+  p.procfs_dir = '/sys/proc/' .. name .. '/'
   kobj.add(name .. '/rID', 'proc', {
     open = function(_, m)
       return {
@@ -139,18 +160,6 @@ function ret.process:new(name)
     end,
     isReadOnly = true
   })
-
-  kobj.add(name .. '/streams', 'proc', {
-    open = function(_, m)
-      return {
-        readLine = function() return p.stdstreams_dir end,
-        readAll = function() return p.stdstreams_dir end,
-        close = function() end
-      }
-    end,
-    isReadOnly = true
-  })
-
   kobj.add(name .. '/name', 'proc', {
     open = function(_, m)
       return {
@@ -181,6 +190,18 @@ function ret.process:spawnThread(f, name)
   else
     t.name = string.randomize and string.randomize("xxyy:xxyy-xxxx@xxyy") or math.random()
   end
+
+  kobj.add(self.name .. '/threads/' .. string.sub(t and t.tid or 'no_tid', 1, 3) .. '/name', 'proc', {
+    open = function(_, m)
+      return {
+        readLine = function() return t.name end,
+        readAll = function() return t.name end,
+        close = function() end
+      }
+    end,
+    isReadOnly = true
+  })
+
   table.insert(self.children, 1, t)
   return t
 end
