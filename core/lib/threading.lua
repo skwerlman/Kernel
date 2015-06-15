@@ -149,7 +149,7 @@ function ret.process:new(name)
   p.name = name or rID
   p.children = {}
   p.stdstreams_dir = fs.combine(fs.combine('/proc/', rID), 'streams')
-  p.procfs_dir = '/sys/proc/' .. name .. '/'
+
   kobj.add(name .. '/rID', 'proc', {
     open = function(_, m)
       return {
