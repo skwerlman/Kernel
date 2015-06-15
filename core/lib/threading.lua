@@ -124,6 +124,14 @@ function ret.process:new( name )
   local rID = string.randomize and string.randomize("xxyy") or math.random()
   local p = {}
   kobj.add(name, 'proc', {isDir=true})
+  kobj.add(name .. '/rID', 'proc', {
+    open = function(_, m)
+      return {
+        readLine = function() return rID end,
+        readAll = function() return rAll end
+      }
+    end
+  })
   p.tid = rID
   p.name = name or rID
   p.children = {}

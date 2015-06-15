@@ -26,7 +26,7 @@ local kobj = {}
 
 local tree = {}
 
-fs.addVirtual('/sys', {
+fs.addVirtual('sys', {
   isDir = true
 })
 
@@ -41,17 +41,17 @@ setmetatable(kobj, {
 })
 
 function kobj.add(path, category, obj)
-  if not fs.exists(('/sys/%s'):format(category)) then
-    fs.addVirtual(('/sys/%s'):format(category), {
+  if not fs.exists(('sys/%s'):format(category)) then
+    fs.addVirtual(('sys/%s'):format(category), {
       isDir = true
     })
   end
-  fs.addVirtual(('/sys/%s/%s'):format(category, path ), obj)
+  fs.addVirtual(('sys/%s/%s'):format(category, path ), obj)
   tree[category .. '.' .. path] = obj
 end
 
 function kobj.remove(path, category)
-  fs.removeVirtual(('/sys/%s/%s'):format(category, path))
+  fs.removeVirtual(('sys/%s/%s'):format(category, path))
   tree[category .. '.' .. path] = nil
 end
 
