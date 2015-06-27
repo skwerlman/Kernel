@@ -256,6 +256,36 @@ if fs.exists(fs.combine(kRoot, '/core/mod')) then
   end
 end
 
+kmsg.post('wear the thing', kernelcmd['extdir'])
+if kernelcmd['extdir'] and fs.exists(kernelcmd['extdir']) then
+  _G.exts = {}
+  for k, v in ipairs(fs.list(kernelcmd['extdir'])) do
+    local ok, err = loadfile(fs.combine(kernelcmd['extdir'], v))
+    if not ok then
+      printError(err)
+    else
+      kmsg.post('core', 'loaded extension library %s', v)
+      _G.exts[({v:gsub('.lua', '')})[1]] = ok()
+    end
+  end
+end
+
+function _G.loadext(file)
+  local ok, err = loadfile(file)
+  if not ok then
+    printError(err)
+  else
+    kmsg.post('core', 'loaded dynamic extension library %s', v)
+    _G.exts[({v:gsub('.lua', '')})[1]] = ok()
+  end
+end
+
+os.loadAPI = run.dailin.link
+
+function os.version()
+  return 'tardix-L51 vfs, kext, dkms, tty, thread, run, ikg, dev'
+end
+
 function kreq(path)
   return loadfile(fs.combine(kRoot, path))()
 end
