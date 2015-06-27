@@ -56,8 +56,6 @@ function httpfs:open(path, m)
       end
     })
 
-
-
     function handle.readAll()
       local ret = handle._data
       handle._data = nil

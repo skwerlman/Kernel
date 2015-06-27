@@ -343,6 +343,15 @@ function _unique.umount(root)
   end
 end
 
+function _unique.pipe(r, w)
+  if r and r.readAll and w and w.writeLine then
+    w.writeLine(r.readAll())
+    r.close()
+    w.close()
+  end
+end
+
+
 local fs = _unique
 
 
