@@ -352,7 +352,4 @@ function _unique.pipe(r, w)
 end
 
 
-local fs = _unique
-
-
-return fs
+return _unique

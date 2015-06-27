@@ -64,7 +64,7 @@ function httpfs:open(path, m)
 
     local line = 1
     local splat = string.split(handle._data, '\n')
-    function handle.read()
+    function handle.readLine()
       if line >= #splat then
         error('reached end of httpfs input buffer',2)
         return
