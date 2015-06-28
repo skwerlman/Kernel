@@ -351,5 +351,142 @@ function _unique.pipe(r, w)
   end
 end
 
+function _unique.makeVirtualIO(path)
+  local watcher = {}
+
+
+  local object = {
+    isDir = false,
+    isReadOnly = false,
+  }
+
+  function object:ioctl(path, req, ...)
+    if watcher.onIOControl then
+      watcher.onIOControl(self, path, req, ...)
+    else
+      return false, 'not yet implemented'
+    end
+  end
+
+  function object:open(path, mode)
+    local ret = {}
+    if mode == 'r' then
+      local closed = false
+
+      function ret.readLine()
+        if not closed then
+          if watcher.onRead then
+            return watcher.onRead(self)
+          else
+            return nil
+          end
+        else
+          return nil
+        end
+      end
+
+      function ret.readAll()
+        if not closed then
+          if watcher.onReadAll then
+            return watcher.onReadAll(self)
+          else
+            return nil
+          end
+        else
+          return nil
+        end
+      end
+
+      function ret.close()
+        if watcher.onClose then
+          return watcher.onClose(self)
+        end
+        closed = true
+      end
+    elseif mode == 'w' then
+      local closed = false
+
+      function ret.writeLine(...)
+        if not closed then
+          if watcher.onWriteLine then
+            return watcher.onWriteLine(self, ...)
+          else
+            return nil
+          end
+        else
+          return nil
+        end
+      end
+
+      function ret.write(...)
+        if not closed then
+          if watcher.onWrite then
+            return watcher.onWrite(self, ...)
+          else
+            return nil
+          end
+        else
+          return nil
+        end
+      end
+
+      function ret.close()
+        if watcher.onClose then
+          return watcher.onClose(self)
+        end
+        closed = true
+      end
+
+      function ret.flush()
+        if watcher.onFlush then
+          return watcher.onFlush(self)
+        end
+      end
+    elseif mode == 'a' then
+      local closed = false
+
+      function ret.writeLine(...)
+        if not closed then
+          if watcher.onWriteLineA then
+            return watcher.onWriteLineA(self, ...)
+          else
+            return nil
+          end
+        else
+          return nil
+        end
+      end
+
+      function ret.write(...)
+        if not closed then
+          if watcher.onWriteA then
+            return watcher.onWriteA(self, ...)
+          else
+            return nil
+          end
+        else
+          return nil
+        end
+      end
+
+      function ret.close()
+        if watcher.onClose then
+          return watcher.onClose(self)
+        end
+        closed = true
+      end
+
+      function ret.flush()
+        if watcher.onFlush then
+          return watcher.onFlushA(self)
+        end
+      end
+    end
+    return ret
+  end
+  fs.addVirtual(path, object)
+
+  return watcher
+end
 
 return _unique

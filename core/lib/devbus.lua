@@ -28,8 +28,34 @@ local _peripheral = (function(tab)
   for k, v in pairs(tab) do
     ret[k] = v
   end
+  return ret
+end)(getfenv(1).peripheral)
 
-  return ret end)(getfenv(1).peripheral)
+devbus.drivers = (function(dir)
+  local ret = {}
+  if fs.exists(dir) then
+    for k, v in ipairs(fs.list(dir)) do
+      if not fs.isDir(fs.combine(dir, v)) then
+        local ok, err = loadfile(fs.combine(dir, v))
+        kmsg.post('core', 'loaded library %s.', v)
+        if not ok then
+          printError(err)
+        else
+          local ok, val = pcall(ok)
+          if ok then
+            ret[({string.gsub(v, '.lua', '')})[1]] = val
+          else
+            printError('failed to load library ' .. v .. ': ' .. val)
+            while true do
+              sleep(0)
+            end
+          end
+        end
+      end
+    end
+  end
+  return ret
+end)(fs.combine(kRoot, '/core/drivers'))
 
 
 function devbus.assign(name, fun)
@@ -109,7 +135,7 @@ function devbus.discover()
       ['can'] = function(thing)
         return devbus.can(v, thing)
       end,
-      ['id'] = string.randomize and string.randomize('xxyy:xxyy-xxxx@xxyy') or 0
+      ['id'] = string.randomize and string.randomize('xxyy') or 0
     }
   end
 
@@ -148,6 +174,11 @@ function devbus.populate()
         or (typ == 'opp' and 'OpenPeripherals Device: ')
         or 'Unrecognized Device: ') .. _peripheral.getType(k)
       }
+
+      if devbus.drivers[_peripheral.getType(k)] and devbus.drivers[_peripheral.getType(k)].onFound then
+        kmsg.post('drivers', 'found driver for ' .. k)
+        devbus.drivers[_peripheral.getType(k)].onFound(devbus.drivers[_peripheral.getType(k)], k, devices[k])
+      end
       if _peripheral.getType(k) == 'modem' then
         if rednet and not rednet.isOpen() then
           rednet.open(k)

@@ -159,116 +159,120 @@ _G.kobj = ok()
 
 kmsg.post('core', 'tardix kernel attempting initialization now')
 
-if fs.exists(fs.combine(kRoot, '/core/lib')) then
-  for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/lib'))) do
-    if not fs.isDir(fs.combine(fs.combine(kRoot, '/core/lib'), v)) then
-      local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/lib'), v))
-      kmsg.post('core', 'loaded library %s.', v)
-      if not ok then
-        printError(err)
-      else
-        local ok, val = pcall(ok)
-        if ok then
-          _G[({string.gsub(v, '.lua', '')})[1]] = val
+function reload()
+  if fs.exists(fs.combine(kRoot, '/core/lib')) then
+    for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/lib'))) do
+      if not fs.isDir(fs.combine(fs.combine(kRoot, '/core/lib'), v)) then
+        local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/lib'), v))
+        kmsg.post('core', 'loaded library %s.', v)
+        if not ok then
+          printError(err)
         else
-          printError('failed to load library ' .. v .. ': ' .. val)
-          while true do
-            sleep(0)
+          local ok, val = pcall(ok)
+          if ok then
+            _G[({string.gsub(v, '.lua', '')})[1]] = val
+          else
+            printError('failed to load library ' .. v .. ': ' .. val)
+            while true do
+              sleep(0)
+            end
           end
         end
       end
     end
   end
-end
 
-if fs.exists(fs.combine(kRoot, '/core/filesys')) then
-  for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/filesys'))) do
-    if not fs.isDir(fs.combine(fs.combine(kRoot, '/core/filesys'), v)) then
-      local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/filesys'), v))
-      kmsg.post('core', 'loaded filesystem %s.', v)
-      if not ok then
-        printError(err)
-      else
-        local ok, val = pcall(ok)
-        if ok then
-          fs.register(({string.gsub(v, '.lua', '')})[1], val)
+  if fs.exists(fs.combine(kRoot, '/core/filesys')) then
+    for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/filesys'))) do
+      if not fs.isDir(fs.combine(fs.combine(kRoot, '/core/filesys'), v)) then
+        local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/filesys'), v))
+        kmsg.post('core', 'loaded filesystem %s.', v)
+        if not ok then
+          printError(err)
         else
-          printError('failed to load library ' .. v .. ': ' .. val)
-          while true do
-            sleep(0)
+          local ok, val = pcall(ok)
+          if ok then
+            fs.register(({string.gsub(v, '.lua', '')})[1], val)
+          else
+            printError('failed to load library ' .. v .. ': ' .. val)
+            while true do
+              sleep(0)
+            end
           end
         end
       end
     end
   end
-end
 
-if fs.exists(fs.combine(kRoot, '/core/mount')) then
-  for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/mount'))) do
-    if not fs.isDir(fs.combine(fs.combine(kRoot, '/core/mount'), v)) then
-      local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/mount'), v))
-      kmsg.post('core', 'loaded mount %s.', v)
-      if not ok then
-        printError(err)
-      else
-        local ok, val = pcall(ok)
-        if ok then
-          fs.mount(({string.gsub(v, '.lua', '')})[1], val)
+  if fs.exists(fs.combine(kRoot, '/core/mount')) then
+    for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/mount'))) do
+      if not fs.isDir(fs.combine(fs.combine(kRoot, '/core/mount'), v)) then
+        local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/mount'), v))
+        kmsg.post('core', 'loaded mount %s.', v)
+        if not ok then
+          printError(err)
         else
-          printError('failed to load mount ' .. v .. ': ' .. val)
-          kmsg.post('core', 'failed to load mount ' .. v .. ': ' .. val)
-          while true do
-            sleep(0)
+          local ok, val = pcall(ok)
+          if ok then
+            fs.mount(({string.gsub(v, '.lua', '')})[1], val)
+          else
+            printError('failed to load mount ' .. v .. ': ' .. val)
+            kmsg.post('core', 'failed to load mount ' .. v .. ': ' .. val)
+            while true do
+              sleep(0)
+            end
           end
         end
       end
     end
   end
-end
 
 
-if fs.exists(fs.combine(kRoot, '/core/lib/init')) then
-  _G.init = {}
-  for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/lib/init'))) do
-    local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/lib/init'), v))
-    if not ok then
-      printError(err)
-    else
-      kmsg.post('core', 'loaded initialization library %s', v)
-      _G.init[({v:gsub('.lua', '')})[1]] = ok()
+  if fs.exists(fs.combine(kRoot, '/core/lib/init')) then
+    _G.init = {}
+    for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/lib/init'))) do
+      local ok, err = loadfile(fs.combine(fs.combine(kRoot, '/core/lib/init'), v))
+      if not ok then
+        printError(err)
+      else
+        kmsg.post('core', 'loaded initialization library %s', v)
+        _G.init[({v:gsub('.lua', '')})[1]] = ok()
+      end
+    end
+  end
+
+  if fs.exists(fs.combine(kRoot, '/core/mod')) then
+    if not kernelcmd['nomods'] and module and fs.exists(fs.combine(kRoot, '/core/mod')) then
+      for k, v  in ipairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
+        loadfile(fs.combine(fs.combine(kRoot, '/core/mod'), v))()
+      end
+      module.probeAll('load')
+    elseif kernelcmd['nomods'] and kernelcmd['loadmods'] and module and fs.exists(fs.combine(kRoot, '/core/mod')) then
+      for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
+        loadfile(fs.combine(fs.combine(kRoot, '/core/mod'), v))()
+      end
+      for k, v in pairs(kernelcmd['loadmods']) do
+        module.probe(v, 'load')
+      end
+    end
+  end
+
+  kmsg.post('wear the thing', kernelcmd['extdir'])
+  if kernelcmd['extdir'] and fs.exists(kernelcmd['extdir']) then
+    _G.exts = {}
+    for k, v in ipairs(fs.list(kernelcmd['extdir'])) do
+      local ok, err = loadfile(fs.combine(kernelcmd['extdir'], v))
+      if not ok then
+        printError(err)
+      else
+        kmsg.post('core', 'loaded extension library %s', v)
+        _G.exts[({v:gsub('.lua', '')})[1]] = ok()
+      end
     end
   end
 end
 
-if fs.exists(fs.combine(kRoot, '/core/mod')) then
-  if not kernelcmd['nomods'] and module and fs.exists(fs.combine(kRoot, '/core/mod')) then
-    for k, v  in ipairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
-      loadfile(fs.combine(fs.combine(kRoot, '/core/mod'), v))()
-    end
-    module.probeAll('load')
-  elseif kernelcmd['nomods'] and kernelcmd['loadmods'] and module and fs.exists(fs.combine(kRoot, '/core/mod')) then
-    for k, v in ipairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
-      loadfile(fs.combine(fs.combine(kRoot, '/core/mod'), v))()
-    end
-    for k, v in pairs(kernelcmd['loadmods']) do
-      module.probe(v, 'load')
-    end
-  end
-end
-
-kmsg.post('wear the thing', kernelcmd['extdir'])
-if kernelcmd['extdir'] and fs.exists(kernelcmd['extdir']) then
-  _G.exts = {}
-  for k, v in ipairs(fs.list(kernelcmd['extdir'])) do
-    local ok, err = loadfile(fs.combine(kernelcmd['extdir'], v))
-    if not ok then
-      printError(err)
-    else
-      kmsg.post('core', 'loaded extension library %s', v)
-      _G.exts[({v:gsub('.lua', '')})[1]] = ok()
-    end
-  end
-end
+reload()
 
 function _G.loadext(file)
   local ok, err = loadfile(file)
