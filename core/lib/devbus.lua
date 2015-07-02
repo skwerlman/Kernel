@@ -240,7 +240,7 @@ function devbus.device.firstByType(typ)
   if devbus.update then
     devbus.update()
   end
-  return type(devbus.device.allByType(typ)) == 'table' and first(devbus.device.allByType(typ)).side or false
+  return type(devbus.device.allByType(typ)) == 'table' and first(devbus.device.allByType(typ)) or false
 end
 
 function devbus.device.allByRawType(typ)
@@ -262,7 +262,7 @@ function devbus.device.firstByRawType(typ)
     devbus.update()
   end
 
-  return type(devbus.device.allByRawType(typ)) == 'table' and first(devbus.device.allByRawType(typ)).side or false
+  return type(devbus.device.allByRawType(typ)) == 'table' and first(devbus.device.allByRawType(typ)) or false
 end
 
 function devbus.update()

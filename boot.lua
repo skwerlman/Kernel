@@ -32,13 +32,17 @@ term.clear()
 
 
 local function split(inputstr, sep)
-  sep = sep or "%s"
-  local t={} ; i=1
-  for str in string.gmatch(inputstr, '([^'..sep..']+)') do
-    t[i] = str
-    i = i + 1
+  if inputstr and sep then
+    sep = sep or "%s"
+    local t={} ; i=1
+    for str in string.gmatch(inputstr, '([^'..sep..']+)') do
+      t[i] = str
+      i = i + 1
+    end
+    return t
+  else
+    error('no inputstr or sep', 2)
   end
-  return t
 end
 
 local _cmdlin1 = split(table.concat({...}, ' '), ' ')
@@ -122,6 +126,8 @@ function string:table()
   self:gsub('.', function(c) table.insert(ret, c) end)
   return ret
 end
+
+string.split = split
 
 ----------------------------------------------------------------------------------------------------------
 _G.kRoot = kernelcmd['kernel_root']
