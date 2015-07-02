@@ -56,6 +56,7 @@ function ret.openVirtualIO(channel, reply, object)
   end
 
   function obj:onWrite(data)
+    kmsg.post('network', 'writing \'%s\' to a stream to %d', data, channel)
     if not object.isOpen(channel) then
       object.open(channel)
     end
@@ -71,6 +72,7 @@ function ret.openVirtualIO(channel, reply, object)
   end
 
   function obj:onWriteLine(data)
+    kmsg.post('network', 'writing \'%s\' to a stream to %d', data, channel)
     if not object.isOpen(channel) then
       object.open(channel)
     end
@@ -145,6 +147,7 @@ run.spawn(function()
               msg = 'accept-connect'
             }
           })
+          ret.openVirtualIO(repChan, os.getComputerID(), modem)
         elseif msg == 'accept-connect' then
           ret.openVirtualIO(repChan, os.getComputerID(), modem)
         end
