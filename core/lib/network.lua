@@ -153,6 +153,9 @@ run.spawn(function()
         end
 
         os.queueEvent('tnet-message', repChan, message.tnet_meta.msg)
+        if not fs.exists('/sys/dev/conI'..repChan) then
+          ret.openVirtualIO(repChan, os.getComputerID(), modem)
+        end
       end
     else
       kmsg.post('network', 'message from %d (not to us, to %d): %s', repChan,
