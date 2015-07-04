@@ -32,6 +32,6 @@ function main()
           end
         end
       end
-    ,'kernel event handler')
+    , 'kernel event handler')
   end
 end
