@@ -21,6 +21,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
+--[[
+@internal
+Spawn the kernel thread to handle events 
+]]
 function main()
   if kthread and threading and threading.scheduler then
     threading.scheduler:spawnThread(

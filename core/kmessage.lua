@@ -135,7 +135,14 @@ local stack = fifo.new()
 local msg = {}
 
 local backup = {}
+--[[
+Post a message onto the kernel messaging system
+This is useful when no terminal is avaiable and the kernel still has to do logging.
 
+@param sender the sender of the message to post
+@param text the format of the text to send, in string.format format.
+@param ... the arguments to format the text with (optional).
+]]
 function msg.post(sender, text, ...)
 	stack:push({
 		['time'] = os.clock(),
@@ -149,16 +156,21 @@ function msg.post(sender, text, ...)
 	})
 	os.queueEvent('kernel_message', ('[%s] [%s]: %s'):format(tostring(os.clock()), sender, text))
 end
-
+--[[
+Return the last message in the kernel messaging system.
+]]
 function msg.getLast()
 	local e = stack:pop()
 	if e then
-		return ('[%s] [%s]: %s'):format(tostring(e.time), e.sender, e.text)
+		return e
 	else
 		return 'reached end of kmsg'
 	end
 end
-
+--[[
+Get all messages of the kernel messaging system currently on the stack.
+@param s return strings in the default format.
+]]
 function msg.getAll(s)
 	local ret = {}
 	local oret = {}
@@ -173,11 +185,16 @@ function msg.getAll(s)
 		return oret
 	end
 end
-
+--[[
+Clear the kernel messaging system.
+]]
 function msg.clear()
 	stack:pop(#stack._et)
 end
 
 msg.queue = stack
+--[[
+A backup of all messages in the system.
+]]
 msg.backup = backup
 return msg

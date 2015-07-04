@@ -29,14 +29,26 @@ oldfs.id = 'oldfilesystem'
 _unique = {}
 
 _unique._registers = {}
+--[[
+Register a file system.
+@param n the name of the file system
+@param t a table representing the file system.
+Optimally, the t parameter should contain all operations in the fs table and a getOwner function. The getOwner function should return true when the file system is going to take care of a path.
+]]
 function _unique.register(n, t)
   _unique._registers[n] = t
 end
-
-function _unique.unregister(n, t)
-  _unique._registers[n] = t
+--[[
+Unregister a file system.
+@param n the name of the file system.
+]]
+function _unique.unregister(n)
+  _unique._registers[n] = nil
 end
-
+--[[
+Get the owner file system for a path.
+@param path the path.
+]]
 function _unique.getOwnerFor(path)
   if path then
     for k, v in pairs(_unique._registers) do
@@ -52,6 +64,12 @@ function _unique.getOwnerFor(path)
   end
 end
 
+--[[
+Call a file system function in the owner for a path
+@param path the path
+@param fn the function's name
+@param ... the arguments to the function.
+]]
 function _unique.callFunctionInOwnerFor(path, fn, ...)
   local owner = _unique.getOwnerFor(path)
   if owner and owner[fn] then
@@ -66,7 +84,10 @@ function _unique.callFunctionInOwnerFor(path, fn, ...)
 end
 
 local virtuals = {}
-
+--[[
+Check if a path is virtual.
+@param p the path
+]]
 function _unique.isVirtual(p)
   if not p then
     return false
@@ -84,7 +105,10 @@ function _unique.isVirtual(p)
     end
   end
 end
-
+--[[
+Get the virtual object for a path.
+@param p the path.
+]]
 function _unique.getVirtual(p)
   if virtuals[p] ~= nil then
     return virtuals[p]
@@ -96,13 +120,22 @@ function _unique.getVirtual(p)
     return virtuals[p:sub(1, 1) == '/' and p:sub(2, #p)]
   end
 end
-
+--[[
+Add a virtual object.
+@param p the path of the object to add.
+@param n the object.
+]]
 function _unique.addVirtual(p, n)
   if not virtuals[p] then
     virtuals[p] = n
   end
 end
-
+--[[
+Call a function in the virtual object for a path.
+@param p the path
+@parma f the function's name
+@param ... the parameters to path to a function.
+]]
 function _unique.callVirtual(p, f, ...)
   if _unique.getVirtual(p) and _unique.getVirtual(p)[f] then
     return _unique.getVirtual(p)[f](_unique.getVirtual(p), p, ...)
@@ -110,11 +143,20 @@ function _unique.callVirtual(p, f, ...)
     return nil
   end
 end
-
+--[[
+Remove a virtual object.
+@param p the path of the virtual object.
+]]
 function _unique.removeVirtual(p)
   if virtuals[p] then virtuals[p] = nil end
 end
 
+--[[
+List a directory.
+Takes into consideration virtual objects and file system owners.
+
+@param path the path of the directory to list.
+]]
 function _unique.list(path)
   local ret = {}
   if path == '' then
@@ -149,14 +191,24 @@ function _unique.list(path)
 
   return ret
 end
+--[[
+Check if a file exists.
+@param p the path of file.
 
+Takes into consideration virtual objects and file system owners.
+]]
 function _unique.exists(p)
   if _unique.isVirtual(p) then
     return true
   end
   return _unique.callFunctionInOwnerFor(p, 'exists')
 end
+--[[
+Check if a file is a directory.
+@param p the path of the file
 
+Takes into consideration virtual objects and file system owners.
+]]
 function _unique.isDir(p)
   if _unique.isVirtual(p) then
     if _unique.getVirtual(p).isDir ~= nil then
@@ -174,6 +226,12 @@ function _unique.isDir(p)
   return _unique.callFunctionInOwnerFor(p, 'isDir')
 end
 
+--[[
+Check if a file is read only.
+@param p the path of the file
+
+Takes into consideration virtual objects and file system owners.
+]]
 function _unique.isReadOnly(p)
   if _unique.isVirtual(p) then
     if type(_unique.getVirtual(p).isReadOnly) == 'function' then
@@ -200,10 +258,19 @@ local function split(inputstr, sep)
   return t
 end
 
+--[[
+Get the name of a path. This returns the last component of the path when tokenized on '/'.
+@param p the path
+]]
 function _unique.getName(p)
   return split(p, '/')[#(split(p, '/'))]
 end
+--[[
+Get the size of a file.
+@param p the file
 
+Takes into consideration virtual objects and file system owners.
+]]
 function _unique.getSize(p)
   if _unique.isVirtual(p) then
     return 0
@@ -215,7 +282,12 @@ function _unique.getSize(p)
     return 0
   end
 end
+--[[
+Get free space in a path.
+@param p the path
 
+Takes into consideration virtual objects and file system owners.
+]]
 function _unique.getFreeSpace(p)
   if _unique.isVirtual(p) then
     return _unique.callVirtual(p, 'getFreeSpace')
@@ -223,7 +295,12 @@ function _unique.getFreeSpace(p)
 
   return _unique.callFunctionInOwnerFor(p, 'getFreeSpace')
 end
+--[[
+Make a directory.
+@param p the path.
 
+Takes into consideration virtual objects and file system owners.
+]]
 function _unique.makeDir(p)
   if _unique.isReadOnly(p) then
     error(p .. ' is read only.')
@@ -237,7 +314,13 @@ function _unique.makeDir(p)
     return _unique.callFunctionInOwnerFor(p, 'makeDir')
   end
 end
+--[[
+Move a file.
+@param p the source file
+@param e the destination file
 
+Takes into consideration virtual objects and file system owners.
+]]
 function _unique.move(p, e)
   if _unique.isVirtual(p) and not _unique.exists(e) then
     return _unique.callVirtual(p, 'move', e)
@@ -246,6 +329,13 @@ function _unique.move(p, e)
   return _unique.callFunctionInOwnerFor(p, 'move', e)
 end
 
+--[[
+Move a file.
+@param p the source file
+@param e the destination file
+
+Takes into consideration virtual objects and file system owners.
+]]
 function _unique.copy(p, e)
   if _unique.isVirtual(p) and not _unique.exists(e) then
     return _unique.callVirtual(p, 'copy', e)
@@ -253,7 +343,12 @@ function _unique.copy(p, e)
 
   return _unique.callFunctionInOwnerFor(p, 'copy', e)
 end
+--[[
+Delete a file.
+@param p the path.
 
+Takes into consideration virtual objects and file system owners.
+]]
 function _unique.delete(p)
   if _unique.isVirtual(p) then
     return _unique.callVirtual(p, 'delete')
@@ -264,10 +359,21 @@ function _unique.delete(p)
   end
 end
 
+--[[
+Compine two paths.
+@param p1 one path
+@param p2 the other path
+]]
 function _unique.combine(p1, p2)
   return oldfs.combine(p1, p2)
 end
+--[[
+Open a file, returning a handle.
+@param path the path of the file to open
+@param mode the mode to open the file in. This can be 'r', 'w', 'a', 'rb', 'wb' and 'ab'.
 
+Takes into consideration virtual objects and file system owners.
+]]
 function _unique.open(path, mode)
   assert(type(path) == 'string', 'expected string for path, got ' .. type(path))
   assert(type(mode) == 'string', 'expected string for mode, got ' .. type(mode))
@@ -289,18 +395,34 @@ function _unique.open(path, mode)
   end
 end
 
+--[[
+Find a file using a wildcard.
+@param wild the wildcard to use.
+]]
 function _unique.find(wild)
   return oldfs.find(wild)
 end
-
+--[[
+Get the directory of a path.
+@param p the path
+]]
 function _unique.getDir(p)
   return oldfs.getDir(p)
 end
-
+--[[
+Get the drive of a path.
+@param p the path
+]]
 function _unique.getDrive(p)
   return oldfs.getDrive(p)
 end
 
+--[[
+Control the input and output of a special device. This is used when communicating to a kernel driver.
+@param p the path
+@param r the request
+@param ... the parameters to the request.
+]]
 function _unique.ioctl(p, r, ...)
   if _unique.isVirtual(p) then
     return _unique.callVirtual(p, 'ioctl', r, ...)
@@ -319,7 +441,11 @@ function _unique.ioctl(p, r, ...)
 end
 
 local _vmounts = {}
-
+--[[
+Add virtual files in a batch.
+@param root the root
+@param files a table of virtual objects
+]]
 function _unique.mount(root, files)
   fs.addVirtual(root, files.rootn or {isDir=true})
   if not _vmounts[root] then
@@ -332,7 +458,10 @@ function _unique.mount(root, files)
   end
 end
 
-
+--[[
+Remove mounted virtual files
+@param root the root
+]]
 function _unique.umount(root)
   fs.removeVirtual(root)
   if _vmounts[root] then
@@ -342,7 +471,11 @@ function _unique.umount(root)
     _vmounts[root] = nil
   end
 end
-
+--[[
+Pipe a read-mode file handle into a write-mode one.
+@param r a read-mode file handle
+@param w the write-mode file handle.
+]]
 function _unique.pipe(r, w)
   if r and r.readAll and w and w.writeLine then
     w.writeLine(r.readAll())
@@ -350,7 +483,7 @@ function _unique.pipe(r, w)
     w.close()
   end
 end
-
+-- documentation to be done.
 function _unique.makeVirtualIO(path)
   local watcher = {}
 

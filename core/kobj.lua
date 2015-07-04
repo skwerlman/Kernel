@@ -39,7 +39,12 @@ setmetatable(kobj, {
     end
   end
 })
-
+--[[
+Add an object to a category in the system file system
+@param path the name of the object
+@param category the category to add the obejct to
+@param the object itself
+]]
 function kobj.add(path, category, obj)
   if not fs.exists(('sys/%s'):format(category)) then
     fs.addVirtual(('sys/%s'):format(category), {
@@ -50,6 +55,12 @@ function kobj.add(path, category, obj)
   tree[category .. '.' .. path] = obj
 end
 
+
+--[[
+Remove an object from the system filesystem.
+@param path the name of the object
+@param category the category of the object
+]]
 function kobj.remove(path, category)
   fs.removeVirtual(('sys/%s/%s'):format(category, path))
   tree[category .. '.' .. path] = nil
