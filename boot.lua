@@ -127,6 +127,14 @@ function string:table()
   return ret
 end
 
+function string:toBinary()
+  local ret = {}
+  self:gsub('.', function(c)
+    table.insert(ret, string.byte(c))
+  end)
+  return ret
+end
+
 string.split = split
 
 ----------------------------------------------------------------------------------------------------------
@@ -162,6 +170,26 @@ end
 
 _G.kobj = ok()
 
+
+local ok, err = loadfile(fs.combine(kRoot, '/core/threading.lua'))
+if not ok then
+  printError(err)
+  while true do
+    coroutine.yield()
+  end
+end
+
+_G.threading = ok()
+
+local ok, err = loadfile(fs.combine(kRoot, '/core/run.lua'))
+if not ok then
+  printError(err)
+  while true do
+    coroutine.yield()
+  end
+end
+
+_G.run = ok()
 
 kmsg.post('core', 'tardix kernel attempting initialization now')
 
