@@ -234,7 +234,11 @@ function loadfile(file)
 
     if fn and nam then
       repeat
-        _G[nam] = fn
+        if nam:sub(1, 4) == 'lib.' then
+          _G[nam:sub(4, #nam)] = fn()
+        else
+          _G[nam] = fn
+        end
         fn, nam = lambda.readFunction(d)
       until fn == nil and nam == nil
     end
