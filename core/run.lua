@@ -207,6 +207,30 @@ function run.require(file)
   end
 end
 
+function os.run(env, file, ...)
+  local renv = {}
+  local oenv = env
+
+  setmetatable(renv, {['__index'] = function( _, k )
+    if oenv and oenv[k] then
+      return oenv[k]
+    elseif envars and envars[k] then
+      return envars[k]
+    else
+      return getfenv(2)[k]
+    end
+  end})
+
+  local fnc = loadfile(file)
+  setfenv(fnc, renv)
+
+  local args = {}
+  for k, v in pairs {...} do
+    table.insert(args, string.split(v, ' '))
+  end
+
+  fnc(unpack(args))
+end
 --_G.require = run.require
 
 
