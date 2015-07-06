@@ -209,20 +209,19 @@ end
 
 function os.run(env, file, ...)
   local renv = {}
-  local oenv = env
 
-  setmetatable(renv, {['__index'] = function( _, k )
-    if oenv and oenv[k] then
-      return oenv[k]
-    elseif envars and envars[k] then
-      return envars[k]
-    else
-      return getfenv(2)[k]
-    end
-  end})
+
 
   local fnc = loadfile(file)
-  setfenv(fnc, renv)
+  setfenv(fnc, setmetatable({}, {
+    ['__index'] = function(_, t)
+      if rawget(env, t) then
+        return rawget(env, t)
+      else
+        return _G[t]
+      end
+    end
+  }))
 
   local args = {}
   for k, v in pairs {...} do

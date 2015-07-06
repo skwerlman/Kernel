@@ -208,7 +208,7 @@ end
 function lambda.readFunction(handle)
   local nam, fn = lambda.readSection(handle)
   if nam:sub(1, #('text.')) == 'text.' then
-    return loadstring(dec(fn)), nam:sub(#('text.'), #nam)
+    return loadstring(dec(fn)), nam:sub(#('text.') + 1, #nam)
   end
 end
 
@@ -219,14 +219,27 @@ function loadfile(file)
     local d = fs.open(file, 'rb')
     local _, __, ___, ____ = lambda.readSection(d), lambda.readSection(d)
     local fn, nam = lambda.readFunction(d)
-    if nam == '.start' then
-      return fn
+
+    local start, fns = nil, {}
+    if nam == 'start' then
+      start = fn
     else
       repeat
         fn, nam = lambda.readFunction(d)
-      until nam == '.start'
-      return fn
+      until nam == 'start'
+      start = fn
     end
+
+    local fn, nam = lambda.readFunction(d)
+
+    if fn and nam then
+      repeat
+        _G[nam] = fn
+        fn, nam = lambda.readFunction(d)
+      until fn == nil and nam == nil
+    end
+
+    return start
   else
     local ok = olfile(file)
     setfenv(ok, _G)
