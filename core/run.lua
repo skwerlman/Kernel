@@ -213,7 +213,9 @@ function os.run(env, file, ...)
   local fnc = loadfile(file)
   setfenv(fnc, setmetatable({}, {
     ['__index'] = function(_, t)
-      if rawget(env, t) then
+      if t == '_ENV' then
+        return _G
+      elseif rawget(env, t) then
         return rawget(env, t)
       else
         return _G[t]
