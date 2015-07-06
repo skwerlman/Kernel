@@ -210,8 +210,6 @@ end
 function os.run(env, file, ...)
   local renv = {}
 
-
-
   local fnc = loadfile(file)
   setfenv(fnc, setmetatable({}, {
     ['__index'] = function(_, t)
@@ -223,12 +221,7 @@ function os.run(env, file, ...)
     end
   }))
 
-  local args = {}
-  for k, v in pairs {...} do
-    table.insert(args, string.split(v, ' '))
-  end
-
-  fnc(unpack(args))
+  fnc(...)
 end
 --_G.require = run.require
 
