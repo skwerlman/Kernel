@@ -123,9 +123,12 @@ end
 
 run.spawn(function()
   local modem = devbus.device.firstByRawType('modem')
-  if modem.handle then
+
+  if modem and modem.handle then
     modem = modem.handle
-  end
+  else
+		return
+	end
 
   while true do
     local ev, side, chan, repChan,
