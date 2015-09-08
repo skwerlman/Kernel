@@ -55,10 +55,10 @@ function ret:onFound(side, object)
     object.handle.transmit(activeChannel, activeReplyChannel, data)
   end
 
-  function obj:onIOControl(req, para)
-    if req == 0xf1 then
+  function obj:onIOControl(path, req, para)
+    if req == 1 then
       self.activeChannel = tonumber(para)
-    elseif req == 0xf2 then
+    elseif req == 2 then
       self.activeReplyChannel = tonumber(para)
     end
   end

@@ -290,7 +290,6 @@ if fs.exists(fs.combine(kRoot, '/core/mod')) then
   end
 end
 
-kmsg.post('wear the thing', kernelcmd['extdir'])
 if kernelcmd['extdir'] and fs.exists(kernelcmd['extdir']) then
   _G.exts = {}
   for k, v in ipairs(fs.list(kernelcmd['extdir'])) do
