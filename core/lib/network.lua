@@ -27,7 +27,7 @@ local ret = {}
 function ret.openVirtualIO(channel, reply, object)
   kmsg.post('discovery', 'opening virtual network IO for ID %d', channel)
 
-  local obj = fs.makeVirtualIO('/sys/net/conI' .. channel)
+  local obj = fs.makeVirtualIO('/sys/netsock-' .. channel)
 
   function obj:onReadAll()
     local event, side, frequency,
@@ -156,7 +156,7 @@ run.spawn(function()
         end
 
         os.queueEvent('tnet-message', repChan, message.tnet_meta.msg)
-        if not fs.exists('/sys/net/conI'..repChan) then
+        if not fs.exists('/sys/netsock-'..repChan) then
           ret.openVirtualIO(repChan, os.getComputerID(), modem)
         end
       end
@@ -169,26 +169,26 @@ end)
 
 
 function ret.transmit(to, message)
-  if not fs.exists('/sys/net/conI' .. to) then
+  if not fs.exists('/sys/netsock-' .. to) then
     ret.connect(to)
   end
 
-  if fs.exists('/sys/net/conI' .. to) then
-    local stream = fs.open('/sys/net/conI' .. to, 'w')
+  if fs.exists('/sys/netsock-' .. to) then
+    local stream = fs.open('/sys/netsock-' .. to, 'w')
     stream.writeLine(message)
     stream.close()
   end
 end
 
 function ret.receive(from)
-  if not fs.exists('/sys/net/conI' .. to) then
+  if not fs.exists('/sys/netsock-' .. to) then
     ret.connect(to)
   end
 
   local data
 
-  if fs.exists('/sys/net/conI' .. to) then
-    local stream = fs.open('/sys/net/conI' .. to, 'r')
+  if fs.exists('/sys/netsock-' .. to) then
+    local stream = fs.open('/sys/netsock-' .. to, 'r')
     data = stream.readAll()
     stream.close()
   end
