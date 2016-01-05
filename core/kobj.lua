@@ -27,17 +27,17 @@ local kobj = {}
 local tree = {}
 
 fs.addVirtual('sys', {
-  isDir = true
+	isDir = true
 })
 
 setmetatable(kobj, {
-  ['__index'] = function(_, k)
-    if rawget(_, k) then
-      return rawget(_, k)
-    elseif tree[k] then
-      return tree[k]
-    end
-  end
+	['__index'] = function(_, k)
+		if rawget(_, k) then
+			return rawget(_, k)
+		elseif tree[k] then
+			return tree[k]
+		end
+	end
 })
 --[[
 Add an object to a category in the system file system
@@ -46,13 +46,13 @@ Add an object to a category in the system file system
 @param the object itself
 ]]
 function kobj.add(path, category, obj)
-  if not fs.exists(('sys/%s'):format(category)) then
-    fs.addVirtual(('sys/%s'):format(category), {
-      isDir = true
-    })
-  end
-  fs.addVirtual(('sys/%s/%s'):format(category, path ), obj)
-  tree[category .. '.' .. path] = obj
+	if not fs.exists(('sys/%s'):format(category)) then
+		fs.addVirtual(('sys/%s'):format(category), {
+			isDir = true
+		})
+	end
+	fs.addVirtual(('sys/%s/%s'):format(category, path ), obj)
+	tree[category .. '.' .. path] = obj
 end
 
 
@@ -62,8 +62,8 @@ Remove an object from the system filesystem.
 @param category the category of the object
 ]]
 function kobj.remove(path, category)
-  fs.removeVirtual(('sys/%s/%s'):format(category, path))
-  tree[category .. '.' .. path] = nil
+	fs.removeVirtual(('sys/%s/%s'):format(category, path))
+	tree[category .. '.' .. path] = nil
 end
 
 return kobj
