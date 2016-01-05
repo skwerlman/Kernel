@@ -24,46 +24,46 @@ THE SOFTWARE.
 local ret = {count = 0}
 
 function ret:onFound(side, object)
-  kmsg.post('discovery', 'discovered modem on: ' .. side or 'w0t?')
-  local activeChannel, activeReplyChannel = 65535, 65535
+	kmsg.post('discovery', 'discovered modem on: ' .. side or 'w0t?')
+	local activeChannel, activeReplyChannel = 65535, 65535
 
-  local obj = fs.makeVirtualIO('/sys/dev/chrM' .. ret.count)
-  function obj:onRead()
-    local event, side, frequency,
-      replyFrequency, message, distance = coroutine.yield('modem_message')
-    return message['message']
-  end
+	local obj = fs.makeVirtualIO('/sys/dev/chrM' .. ret.count)
+	function obj:onRead()
+		local event, side, frequency,
+			replyFrequency, message, distance = coroutine.yield('modem_message')
+		return message['message']
+	end
 
-  function obj:onReadAll()
-    local event, side, frequency,
-      replyFrequency, message, distance = coroutine.yield('modem_message')
+	function obj:onReadAll()
+		local event, side, frequency,
+			replyFrequency, message, distance = coroutine.yield('modem_message')
 
-    return message['message']
-  end
+		return message['message']
+	end
 
-  function obj:onWrite(data)
-    if not object.handle.isOpen(activeChannel) then
-      object.handle.open(activeChannel)
-    end
-    object.handle.transmit(activeChannel, activeReplyChannel, data)
-  end
+	function obj:onWrite(data)
+		if not object.handle.isOpen(activeChannel) then
+			object.handle.open(activeChannel)
+		end
+		object.handle.transmit(activeChannel, activeReplyChannel, data)
+	end
 
-  function obj:onWriteLine(data)
-    if not object.handle.isOpen(activeChannel) then
-      object.handle.open(activeChannel)
-    end
-    object.handle.transmit(activeChannel, activeReplyChannel, data)
-  end
+	function obj:onWriteLine(data)
+		if not object.handle.isOpen(activeChannel) then
+			object.handle.open(activeChannel)
+		end
+		object.handle.transmit(activeChannel, activeReplyChannel, data)
+	end
 
-  function obj:onIOControl(path, req, para)
-    if req == 1 then
-      self.activeChannel = tonumber(para)
-    elseif req == 2 then
-      self.activeReplyChannel = tonumber(para)
-    end
-  end
+	function obj:onIOControl(path, req, para)
+		if req == 1 then
+			self.activeChannel = tonumber(para)
+		elseif req == 2 then
+			self.activeReplyChannel = tonumber(para)
+		end
+	end
 
-  ret.count = ret.count + 1
+	ret.count = ret.count + 1
 end
 
 return ret

@@ -263,7 +263,7 @@ end
 
 if fs.exists(fs.combine(kRoot, '/core/mod')) then
 	if not kernelcmd['nomods'] and module and fs.exists(fs.combine(kRoot, '/core/mod')) then
-		for k, v  in ipairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
+		for k, v	in ipairs(fs.list(fs.combine(kRoot, '/core/mod'))) do
 			loadfile(fs.combine(fs.combine(kRoot, '/core/mod'), v))()
 		end
 		module.probeAll('load')

@@ -24,48 +24,48 @@ THE SOFTWARE.
 local lastkey
 
 local function keyIsControl(byte)
-  return byte == keys.leftCtrl or byte == keys.rightCtrl
+	return byte == keys.leftCtrl or byte == keys.rightCtrl
 end
 
 local ret = {}
 
 function ret.ctrlc(event, byte)
-  if event == 'key' then
-    if keyIsControl(lastkey) then
-      if byte == keys.c or byte == keys.C then
-        os.queueEvent('terminate', '^C')
-      end
-    end
-    lastkey = byte
-  end
+	if event == 'key' then
+		if keyIsControl(lastkey) then
+			if byte == keys.c or byte == keys.C then
+				os.queueEvent('terminate', '^C')
+			end
+		end
+		lastkey = byte
+	end
 end
 
 local oldError = error
 function error(d, l)
-  if type(d) == 'number' and not l then
-    oldError(nil, l)
-  else
-    oldError(d, l)
-  end
+	if type(d) == 'number' and not l then
+		oldError(nil, l)
+	else
+		oldError(d, l)
+	end
 end
 
 local oldPrintError = printError
 function printError(data)
-  if data ~= '' then
-    oldPrintError(data)
-  end
+	if data ~= '' then
+		oldPrintError(data)
+	end
 end
 
 function os.pullEvent()
-  local data = {os.pullEventRaw()}
-  if data[1] == 'terminate' then
-    if data[2] and data[2] == '^C' then
-      error(data[2], 0)
-    else
-      error('Terminated', 0)
-    end
-  end
-  return unpack(data)
+	local data = {os.pullEventRaw()}
+	if data[1] == 'terminate' then
+		if data[2] and data[2] == '^C' then
+			error(data[2], 0)
+		else
+			error('Terminated', 0)
+		end
+	end
+	return unpack(data)
 end
 
 
