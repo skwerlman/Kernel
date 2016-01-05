@@ -23,122 +23,122 @@ THE SOFTWARE.
 ]]
 
 local unsafe = {
-  ['queue'] = {
-    ['lifo'] = {
-      ['_et'] = {}
-    }
-  },
-  ['regis'] = {
-    ['a'] = {},
-    ['b'] = {},
-    ['c'] = {},
-    ['d'] = {},
-    ['e'] = {},
-  },
-  ['registers'] = {},
+	['queue'] = {
+		['lifo'] = {
+			['_et'] = {}
+		}
+	},
+	['regis'] = {
+		['a'] = {},
+		['b'] = {},
+		['c'] = {},
+		['d'] = {},
+		['e'] = {},
+	},
+	['registers'] = {},
 }
 
 -- LIFO STACK --
 unsafe.stack = unsafe.queue.lifo
 
 function unsafe.queue.lifo:push(...)
-  if ... then
-    local targs = {...}
-    if type(targs[1]) == 'table' then
-      for _, v in ipairs(targs[1]) do
-        table.insert(self._et, v)
-      end
-    else
-      -- add values
-      for _,v in ipairs(targs) do
-        table.insert(self._et, v)
-      end
-    end
-  end
+	if ... then
+		local targs = {...}
+		if type(targs[1]) == 'table' then
+			for _, v in ipairs(targs[1]) do
+				table.insert(self._et, v)
+			end
+		else
+			-- add values
+			for _,v in ipairs(targs) do
+				table.insert(self._et, v)
+			end
+		end
+	end
 end
 
 function unsafe.queue.lifo:pop(num)
-  local num = num or 1
+	local num = num or 1
 
-  local entries = {}
+	local entries = {}
 
-  for i = 1, num do
-    if #self._et ~= 0 then
-      table.insert(entries, self._et[#self._et])
-      table.remove(self._et)
-    else
-      break
-    end
-  end
+	for i = 1, num do
+		if #self._et ~= 0 then
+			table.insert(entries, self._et[#self._et])
+			table.remove(self._et)
+		else
+			break
+		end
+	end
 
-  return unpack(entries)
+	return unpack(entries)
 end
 
 setmetatable(unsafe.queue.lifo, {
-  ['__index'] = function(t, k)
-    if not rawget(t, k) and #rawget(t, '_et') > 0 then
-      return unsafe.queue.lifo:pop()
-    elseif rawget(t, k) then
-      return rawget(t, k)
-    elseif k == '_et' then
-      return nil
-    else
-      return nil
-    end
-  end,
-  ['__newindex'] = function(t, k, v)
-    unsafe.queue.lifo:push(v)
-  end
+	['__index'] = function(t, k)
+		if not rawget(t, k) and #rawget(t, '_et') > 0 then
+			return unsafe.queue.lifo:pop()
+		elseif rawget(t, k) then
+			return rawget(t, k)
+		elseif k == '_et' then
+			return nil
+		else
+			return nil
+		end
+	end,
+	['__newindex'] = function(t, k, v)
+		unsafe.queue.lifo:push(v)
+	end
 })
 
 setmetatable(unsafe.stack,{
-  ['__index'] = function(t, k)
-    if not rawget(t, k) and #rawget(t, '_et') > 0 then
-      return unsafe.queue.lifo:pop()
-    elseif rawget(t, k) then
-      return rawget(t, k)
-    elseif k == '_et' then
-      return nil
-    else
-      return nil
-    end
-  end,
-  ['__newindex'] = function(t, k, v)
-    unsafe.queue.lifo:push(v)
-  end
+	['__index'] = function(t, k)
+		if not rawget(t, k) and #rawget(t, '_et') > 0 then
+			return unsafe.queue.lifo:pop()
+		elseif rawget(t, k) then
+			return rawget(t, k)
+		elseif k == '_et' then
+			return nil
+		else
+			return nil
+		end
+	end,
+	['__newindex'] = function(t, k, v)
+		unsafe.queue.lifo:push(v)
+	end
 })
 
 -- REGISTERS --
 
 function unsafe.registers:set(r, v)
-  if unsafe.regis[r] then
-    unsafe.regis[r] = v
-  else
-    error('unknown register ' .. r, 2)
-  end
+	if unsafe.regis[r] then
+		unsafe.regis[r] = v
+	else
+		error('unknown register ' .. r, 2)
+	end
 end
 
 function unsafe.registers:get(r)
-  if unsafe.regis[r] then
-    return unsafe.regis[r]
-  else
-    error('unknown register ' .. r, 2)
-  end
+	if unsafe.regis[r] then
+		return unsafe.regis[r]
+	else
+		error('unknown register ' .. r, 2)
+	end
 end
 
 function unsafe.registers:move(r)
-  return function(t)
-    unsafe.registers:set(r, t[1] and t[1] or nil)
-  end
+	return function(t)
+		unsafe.registers:set(r, t[1] and t[1] or nil)
+	end
 end
 
 -- CALL --
 
 function unsafe.call(t)
-  local fn = t[1]
-  local na = t[2] or #unsafe.stack._et
+	local fn = t[1]
+	local na = t[2] or #unsafe.stack._et
 
-  fn(unsafe.stack:pop(na))
+	fn(unsafe.stack:pop(na))
 end
 
 return unsafe
