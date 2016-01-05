@@ -15,6 +15,6 @@ An [object-oriented](https://en.wikipedia.org/wiki/Object-oriented_programming) 
 
 TARDIX is free software, developed under the [MIT License](http://opensource.org/licenses/MIT), by;
 
-  * Matheus de A. (matheus.de.alcantara@gmail.com)
-  * Jared Allard (rainbowdashdc@mezgrman.de)
-  * Brian Hodgins (bhodgins@9600-baud.net)
+	* Matheus de A. (matheus.de.alcantara@gmail.com)
+	* Jared Allard (rainbowdashdc@mezgrman.de)
+	* Brian Hodgins (bhodgins@9600-baud.net)
