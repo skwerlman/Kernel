@@ -26,88 +26,88 @@ THE SOFTWARE.
 
 
 local oldio = (function(tab)
-  local a={}for b,c in pairs(tab)do a[b]=c end;return a
+	local a={}for b,c in pairs(tab)do a[b]=c end;return a
 end)(getfenv(2).io)
 
 local newio = {}
 local streams = {}
 
 --[[setmetatable(newio, {
-  ['__index'] = function(_, k)
-    local s;
-    if getfenv(2).threading and getfenv(2).threading.this then
-      s = streams[getfenv(2).threading.this.rID] or {
-        ['input'] = fs.exists(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stdin')) and
-          io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stdin'), 'r') or nil,
-        ['outpu'] = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stdout'), 'a'),
-        ['error'] = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stderr'), 'a'),
-      }
-      local this = getfenv(2).threading.this
-      function this:onUpdate()
-        for k, v in pairs(s) do
-          if v.flush then
-            v:flush()
-          end
-        end
-      end
-    end
-    if k == 'stdin' then
-      if getfenv(2).threading and getfenv(2).threading.this then
-        if not s or not s.input then
-          if s then
-            s.input = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stdin'), 'r')
-          else
-            s = {
-              ['input'] = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stdin'), 'r')
-            }
-          end
-        end
+	['__index'] = function(_, k)
+		local s;
+		if getfenv(2).threading and getfenv(2).threading.this then
+			s = streams[getfenv(2).threading.this.rID] or {
+				['input'] = fs.exists(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stdin')) and
+					io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stdin'), 'r') or nil,
+				['outpu'] = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stdout'), 'a'),
+				['error'] = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stderr'), 'a'),
+			}
+			local this = getfenv(2).threading.this
+			function this:onUpdate()
+				for k, v in pairs(s) do
+					if v.flush then
+						v:flush()
+					end
+				end
+			end
+		end
+		if k == 'stdin' then
+			if getfenv(2).threading and getfenv(2).threading.this then
+				if not s or not s.input then
+					if s then
+						s.input = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stdin'), 'r')
+					else
+						s = {
+							['input'] = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stdin'), 'r')
+						}
+					end
+				end
 
-        return s.input
-      end
-    elseif k == 'stdout' then
-      if getfenv(2).threading and getfenv(2).threading.this then
-        if not s or not s.outpu then
-          if s then
-            s.outpu = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stdout'), 'a')
-          else
-            s = {
-              ['outpu'] = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stdout'), 'a')
-            }
-          end
-        end
+				return s.input
+			end
+		elseif k == 'stdout' then
+			if getfenv(2).threading and getfenv(2).threading.this then
+				if not s or not s.outpu then
+					if s then
+						s.outpu = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stdout'), 'a')
+					else
+						s = {
+							['outpu'] = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stdout'), 'a')
+						}
+					end
+				end
 
-        return s.outpu
-      end
-    elseif k == 'stderr' then
-      if getfenv(2).threading and getfenv(2).threading.this then
-        if not s or not s.error then
-          print('not existing')
-          if s then
-            s.error = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stderr'), 'a')
-          else
-            s = {
-              ['error'] = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stderr'), 'a')
-            }
-          end
-        end
+				return s.outpu
+			end
+		elseif k == 'stderr' then
+			if getfenv(2).threading and getfenv(2).threading.this then
+				if not s or not s.error then
+					print('not existing')
+					if s then
+						s.error = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stderr'), 'a')
+					else
+						s = {
+							['error'] = io.open(fs.combine(getfenv(2).threading.this.stdstreams_dir, 'stderr'), 'a')
+						}
+					end
+				end
 
-        return s.error
-      end
-    else
-      return nil
-    end
-  end
+				return s.error
+			end
+		else
+			return nil
+		end
+	end
 })]]
 
 return setmetatable({}, {
-  ['__index'] = function(_, k)
-    if oldio[k] then
-      return oldio[k]
-    elseif newio[k] then
-      return newio[k]
-    else
-      return nil
-    end
-  end
+	['__index'] = function(_, k)
+		if oldio[k] then
+			return oldio[k]
+		elseif newio[k] then
+			return newio[k]
+		else
+			return nil
+		end
+	end
 })
