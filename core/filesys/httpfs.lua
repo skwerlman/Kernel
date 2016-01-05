@@ -27,158 +27,158 @@ THE SOFTWARE.
 local httpfs = {}
 
 function httpfs:isOwnerOf(p)
-  return p:sub(1, #('http://')) == 'http://' or p:sub(1, #('https://')) == 'https://'
+	return p:sub(1, #('http://')) == 'http://' or p:sub(1, #('https://')) == 'https://'
 end
 
 function httpfs:open(path, m)
-  if m == 'r' then
-    local handle = {
-      _data = 0
-    }
+	if m == 'r' then
+		local handle = {
+			_data = 0
+		}
 
-    local d = http.get(path, {
-      ['User-Agent'] = 'fs.httpfs (tardix)'
-    })
+		local d = http.get(path, {
+			['User-Agent'] = 'fs.httpfs (tardix)'
+		})
 
-    if not d then
-      error('file not found', 2)
-    else
-      handle._data = d.readAll()
-    end
+		if not d then
+			error('file not found', 2)
+		else
+			handle._data = d.readAll()
+		end
 
-    setmetatable(handle, {
-      ['__index'] = function(_, k)
-        if k:sub(1, 1) == '_' then
-          return
-        else
-          return rawget(_, k)
-        end
-      end
-    })
+		setmetatable(handle, {
+			['__index'] = function(_, k)
+				if k:sub(1, 1) == '_' then
+					return
+				else
+					return rawget(_, k)
+				end
+			end
+		})
 
-    function handle.readAll()
-      local ret = handle._data
-      handle._data = nil
-      return ret
-    end
+		function handle.readAll()
+			local ret = handle._data
+			handle._data = nil
+			return ret
+		end
 
-    local line = 1
-    local splat = string.split(handle._data, '\n')
-    function handle.readLine()
-      if line >= #splat then
-        error('reached end of httpfs input buffer',2)
-        return
-      end
-      local ret = splat[line]
-      line = line + 1
-      return ret
-    end
+		local line = 1
+		local splat = string.split(handle._data, '\n')
+		function handle.readLine()
+			if line >= #splat then
+				error('reached end of httpfs input buffer',2)
+				return
+			end
+			local ret = splat[line]
+			line = line + 1
+			return ret
+		end
 
-    function handle.lines()
-      line = #splat
-      return splat
-    end
+		function handle.lines()
+			line = #splat
+			return splat
+		end
 
-    function handle.close()
-      handle._data = nil
-    end
-    return handle
-  elseif mode == 'w' then
-    local handle = {_url = path}
-    setmetatable(handle, {
-      ['__index'] = function(_, k)
-        if k:sub(1, 1) == '_' then
-          return
-        else
-          return rawget(_, k)
-        end
-      end
-    })
-    function handle.writeLine(...)
-      return http.post(handle._url, ..., {
-        ['User-Agent'] = 'fs.httpfs'
-      })
-    end
-    function handle.write(...)
-      return http.post(handle._url, ..., {
-        ['User-Agent'] = 'fs.httpfs'
-      })
-    end
+		function handle.close()
+			handle._data = nil
+		end
+		return handle
+	elseif mode == 'w' then
+		local handle = {_url = path}
+		setmetatable(handle, {
+			['__index'] = function(_, k)
+				if k:sub(1, 1) == '_' then
+					return
+				else
+					return rawget(_, k)
+				end
+			end
+		})
+		function handle.writeLine(...)
+			return http.post(handle._url, ..., {
+				['User-Agent'] = 'fs.httpfs'
+			})
+		end
+		function handle.write(...)
+			return http.post(handle._url, ..., {
+				['User-Agent'] = 'fs.httpfs'
+			})
+		end
 
-    function handle.close()
-      handle._url = nil
-    end
-    return handle
-  elseif mode == 'u' then --universal mode.
-    local handle = {
-      _data = http.get(path, {
-        ['User-Agent'] = 'fs.httpfs (tardix)'
-      }).readAll(),
-      _url = path
-    }
+		function handle.close()
+			handle._url = nil
+		end
+		return handle
+	elseif mode == 'u' then --universal mode.
+		local handle = {
+			_data = http.get(path, {
+				['User-Agent'] = 'fs.httpfs (tardix)'
+			}).readAll(),
+			_url = path
+		}
 
-    setmetatable(handle, {
-      ['__index'] = function(_, k)
-        if k:sub(1, 1) == '_' then
-          return
-        else
-          return rawget(_, k)
-        end
-      end
-    })
+		setmetatable(handle, {
+			['__index'] = function(_, k)
+				if k:sub(1, 1) == '_' then
+					return
+				else
+					return rawget(_, k)
+				end
+			end
+		})
 
-    function handle.readAll()
-      local ret = handle._data
-      handle._data = nil
-      return ret
-    end
+		function handle.readAll()
+			local ret = handle._data
+			handle._data = nil
+			return ret
+		end
 
-    local line = 1
-    local splat = string.split(handle._data, '\n')
-    function handle.read()
-      if line >= #splat then
-        error('reached end of httpfs input buffer',2)
-        return
-      end
-      local ret = splat[line]
-      line = line + 1
-      return ret
-    end
+		local line = 1
+		local splat = string.split(handle._data, '\n')
+		function handle.read()
+			if line >= #splat then
+				error('reached end of httpfs input buffer',2)
+				return
+			end
+			local ret = splat[line]
+			line = line + 1
+			return ret
+		end
 
-    function handle.lines()
-      line = #splat
-      return splat
-    end
+		function handle.lines()
+			line = #splat
+			return splat
+		end
 
-    function handle.writeLine(...)
-      return http.post(handle._url, ..., {
-        ['User-Agent'] = 'fs.httpfs'
-      })
-    end
-    function handle.write(...)
-      return http.post(handle._url, ..., {
-        ['User-Agent'] = 'fs.httpfs'
-      })
-    end
+		function handle.writeLine(...)
+			return http.post(handle._url, ..., {
+				['User-Agent'] = 'fs.httpfs'
+			})
+		end
+		function handle.write(...)
+			return http.post(handle._url, ..., {
+				['User-Agent'] = 'fs.httpfs'
+			})
+		end
 
-    function handle.close()
-      handle._url = nil
-    end
+		function handle.close()
+			handle._url = nil
+		end
 
-    return handle
-  end
+		return handle
+	end
 end
 
 function httpfs:getDrive(path)
-  return (string.split(path, '/'))[3]
+	return (string.split(path, '/'))[3]
 end
 
 function httpfs:getDir(path)
-  return (string.split(path, '/'))[#(string.split(path, '/')) - 1]
+	return (string.split(path, '/'))[#(string.split(path, '/')) - 1]
 end
 
 function httpfs:exists()
-  return true
+	return true
 end
 
 httpfs.id = 'httpfs'
