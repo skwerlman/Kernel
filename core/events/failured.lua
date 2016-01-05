@@ -23,7 +23,7 @@ THE SOFTWARE.
 ]]
 
 function fail(ev, da)
-  if ev == 'failure' then
-    print(textutils.serialize(da))
-  end
+	if ev == 'failure' then
+		print(textutils.serialize(da))
+	end
 end
